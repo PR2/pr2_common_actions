@@ -1,0 +1,10 @@
+#goal definition
+bool untuck # Set true to untuck, false to tuck
+bool left
+bool right
+---
+#result definition
+uint8 left
+uint8 right
+---
+#feedback

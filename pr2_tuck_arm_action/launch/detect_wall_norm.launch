@@ -1,0 +1,5 @@
+<launch>
+  <!-- detect wall norm action -->
+  <include file="$(find stereo_wall_detection)/wall_extractor.launch"/>
+  <node pkg="pr2_plugs_actions" type="detect_wall_norm.py" name="detect_wall_norm" output="screen"/>
+</launch>

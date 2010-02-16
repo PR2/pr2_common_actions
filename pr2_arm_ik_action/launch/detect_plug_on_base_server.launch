@@ -1,0 +1,13 @@
+<launch>
+	<!-- Start the action server that detects the plug on the base/-->
+  <rosparam command="load" file="$(find	pr2_plugs_actions)/config/detect_plug_on_base.yaml"/>
+  <node name="detect_plug_on_base" pkg="pr2_plugs_actions" type="detect_plug_on_base_">
+   <remap from="plug_filter_topic" to="plug_frame_base"/>
+   <remap from="plug_tracker_topic" to="plug_tracker_l/pose"/>
+   <remap from="joint_states_topic" to="joint_states"/>
+  <node/>
+
+	<!-- Start plug tracker nodes from each forearm camera /-->
+	<include file="$(find outlet_detection)/launch/dual_plug_tracker.launch"/>
+
+</launch>

@@ -1,0 +1,9 @@
+<stack>
+  <description brief="pr2_common_actions">pr2_common_actions</description>
+  <author>Maintained by Wim Meeussen</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_common_actions</url>
+  <depend stack="ros" />
+
+</stack>
