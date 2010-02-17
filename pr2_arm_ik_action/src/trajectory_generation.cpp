@@ -34,7 +34,7 @@
  * Author: Wim Meeussen
  *********************************************************************/
 
-#include <pr2_arm_ik/trajectory_generation.h>
+#include <pr2_arm_ik_action/trajectory_generation.h>
 #include <kdl/velocityprofile_trap.hpp>
 
 

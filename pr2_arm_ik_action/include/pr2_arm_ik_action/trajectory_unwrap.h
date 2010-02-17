@@ -52,8 +52,8 @@ void unwrap(urdf::Model &robot_model, const trajectory_msgs::JointTrajectory& tr
   //defualt result
   traj_out = traj_in;
  
-  num_jnts = traj_in.joint_names.size();
-  traj_pnts = traj_in.points.size();
+  int num_jnts = traj_in.joint_names.size();
+  int traj_pnts = traj_in.points.size(); 
   boost::shared_ptr<const urdf::Joint> joint;
 
   for(int i=0; i<num_jnts; i++)
@@ -63,6 +63,7 @@ void unwrap(urdf::Model &robot_model, const trajectory_msgs::JointTrajectory& tr
     {
       for(int j=1; j<traj_pnts; j++)
       {
+        double diff;
         angles::shortest_angular_distance_with_limits(traj_in.points[j-1].positions[i], traj_in.points[j].positions[i], joint->limits->lower, joint->limits->upper, diff);
         traj_out.points[j].positions[i] = traj_out.points[j-1].positions[i] + diff;
       }

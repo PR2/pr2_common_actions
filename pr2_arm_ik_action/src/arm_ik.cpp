@@ -43,9 +43,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <pr2_arm_ik/pr2_arm_ik_solver.h>
-
-#include <trajectory_filter/fix_wraparound_joints.h>
-#include <motion_planning_msgs/JointTrajectoryWithLimits.h>
+#include <pr2_arm_ik_action/trajectory_unwrap.h>
 
 #include <pr2_common_action_msgs/PR2ArmIKAction.h>
 
@@ -65,7 +63,6 @@ public:
     as_.registerPreemptCallback(boost::bind(&PR2ArmIKAction::preemptCB, this));
 
     // Load Robot Model                                                                                                            
-    urdf::Model robot_model;
     std::string urdf_xml, full_urdf_xml, xml_string;
     nh_.param("urdf_xml", urdf_xml, std::string("robot_description"));
     nh_.searchParam(urdf_xml, full_urdf_xml);
@@ -222,12 +219,15 @@ public:
     traj_goal.trajectory.points[1].positions = traj_desired;
     traj_goal.trajectory.points[1].velocities = velocities;
     ROS_DEBUG("filled out trjectory");
+   
+    trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
+
     // Unwrap angles
-    motion_planning_msgs::JointTrajectoryWithLimits traj_with_limits, traj_with_limits_unwrapped;
+    /*motion_planning_msgs::JointTrajectoryWithLimits traj_with_limits, traj_with_limits_unwrapped;
     traj_with_limits.trajectory = traj_goal.trajectory;
     traj_with_limits.limits.resize(traj_goal.trajectory.joint_names.size());
     traj_unnormalizer_.smooth(traj_with_limits, traj_with_limits_unwrapped);
-    traj_goal.trajectory = traj_with_limits_unwrapped.trajectory;
+    traj_goal.trajectory = traj_with_limits_unwrapped.trajectory;*/
 
 
     // Throw away initial point
@@ -301,6 +301,7 @@ public:
 protected:
 
   ros::NodeHandle nh_;
+  urdf::Model robot_model;
   int dimension_, free_angle_;
   double search_discretization_, timeout_, max_velocity_;
   std::string action_name_, arm_, arm_controller_, root_name_, tip_name_;
@@ -317,7 +318,6 @@ protected:
 
   pr2_common_action_msgs::PR2ArmIKResult result_;
 
-	trajectory_filter::FixWraparoundJoints traj_unnormalizer_;
 
 };
 
