@@ -47,7 +47,7 @@
 #include <trajectory_filter/fix_wraparound_joints.h>
 #include <motion_planning_msgs/JointTrajectoryWithLimits.h>
 
-#include <pr2_plugs_msgs/PR2ArmIKAction.h>
+#include <pr2_common_action_msgs/PR2ArmIKAction.h>
 
 class PR2ArmIKAction
 {
@@ -151,7 +151,7 @@ public:
   void goalCB()
   {
     // accept the new goal                                                      
-    pr2_plugs_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
+    pr2_common_action_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
     
     geometry_msgs::PoseStamped temp_pose_msg;
@@ -308,14 +308,14 @@ protected:
   KDL::Chain kdl_chain_;
   KDL::JntArray jnt_pos_suggestion_;
 
-  actionlib::SimpleActionServer<pr2_plugs_msgs::PR2ArmIKAction> as_;
+  actionlib::SimpleActionServer<pr2_common_action_msgs::PR2ArmIKAction> as_;
   actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>* trajectory_action_;
 
   boost::shared_ptr<pr2_arm_ik::PR2ArmIKSolver> pr2_arm_ik_solver_;
   tf::TransformListener tf_;
   ros::ServiceClient query_traj_srv_;
 
-  pr2_plugs_msgs::PR2ArmIKResult result_;
+  pr2_common_action_msgs::PR2ArmIKResult result_;
 
 	trajectory_filter::FixWraparoundJoints traj_unnormalizer_;
 
