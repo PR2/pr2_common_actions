@@ -33,7 +33,7 @@
 
 import roslib
 import signal
-roslib.load_manifest('pr2_plugs_core')
+roslib.load_manifest('pr2_tuck_arm_action')
 
 import rospy
 
