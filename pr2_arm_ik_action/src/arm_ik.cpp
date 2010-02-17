@@ -219,16 +219,9 @@ public:
     traj_goal.trajectory.points[1].positions = traj_desired;
     traj_goal.trajectory.points[1].velocities = velocities;
     ROS_DEBUG("filled out trjectory");
-   
+
+    //unwrap angles   
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
-
-    // Unwrap angles
-    /*motion_planning_msgs::JointTrajectoryWithLimits traj_with_limits, traj_with_limits_unwrapped;
-    traj_with_limits.trajectory = traj_goal.trajectory;
-    traj_with_limits.limits.resize(traj_goal.trajectory.joint_names.size());
-    traj_unnormalizer_.smooth(traj_with_limits, traj_with_limits_unwrapped);
-    traj_goal.trajectory = traj_with_limits_unwrapped.trajectory;*/
-
 
     // Throw away initial point
     traj_goal.trajectory.points.erase(traj_goal.trajectory.points.begin());

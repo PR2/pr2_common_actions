@@ -17,8 +17,7 @@
   <depend package="pr2_common_action_msgs"/>
   <depend package="tf"/>
   <depend package="pr2_arm_ik"/>
-  <depend package="trajectory_filter"/>
-  <depend package="motion_planning_msgs"/>
+
 
 
 </package>
