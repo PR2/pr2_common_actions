@@ -49,6 +49,7 @@ void printTraj(const trajectory_msgs::JointTrajectory& traj)
     cout << "    - " << traj.joint_names[i] << endl;
   cout << " - Points: " << endl;
   for (unsigned int i=0; i<traj.points.size(); i++){
+    cout << "     - Time from start: " << traj.points[i].time_from_start.toSec()<< endl;
     cout << "     - Positions: " << endl;
     for (unsigned int j=0; j<traj.points[i].positions.size(); j++)
       cout << "      - " << traj.points[i].positions[j] << endl;
@@ -77,7 +78,7 @@ int main(int argc, char** argv)
   traj_in.points.resize(2);
 
   traj_in.points[0].positions.resize(3);
-  traj_in.points[0].time_from_start = ros::Duration(0.0);
+  traj_in.points[0].time_from_start = ros::Duration(1.0);
   traj_in.points[0].positions[0] = 0.0;
   traj_in.points[0].positions[1] = 0.0;
   traj_in.points[0].positions[2] = 0.0;
