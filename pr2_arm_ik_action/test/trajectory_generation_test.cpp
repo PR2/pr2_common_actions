@@ -35,71 +35,64 @@
  *********************************************************************/
 
 #include <pr2_arm_ik/trajectory_generation.h>
-#include <kdl/velocityprofile_trap.hpp>
+#include <trajectory_msgs/JointTrajectory.h>
+#include <ros/ros.h>
+#include <iostream>
 
+using namespace std;
 
-namespace trajectory{
-
-TrajectoryGenerator::TrajectoryGenerator(double max_vel, double max_acc, unsigned int size)
-  : generators_(size)
+void printTraj(const trajectory_msgs::JointTrajectory& traj)
 {
-  for (unsigned int i=0; i<size; i++)
-    generators_[i] = new KDL::VelocityProfile_Trap(max_vel, max_acc);
-}
-
-
-TrajectoryGenerator::~TrajectoryGenerator()
-{
-  for (unsigned int i=0; i<generators_.size(); i++)
-    delete generators_[i];
-}
-
-void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_in, trajectory_msgs::JointTrajectory& traj_out)
-{
-  // default result
-  traj_out = traj_in;
-
-  // check trajectory message
-  if (traj_in.points.size() != 2 || 
-      traj_in.points[0].positions.size() != generators_.size() ||
-      traj_in.points[1].positions.size() != generators_.size()){
-    ROS_ERROR("Invalid trajectory message");
-    return;
-  }
-
-  // generate initial profiles
-  for (unsigned int i=0; i<generators_.size(); i++)
-    generators_[i]->SetProfile(traj_in.points[0].positions[i], traj_in.points[1].positions[i]);
-
-  // find profile that takes most time
-  double max_time = (traj_in.points[1].time_from_start - traj_in.points[0].time_from_start).toSec();
-  for (unsigned int i=0; i<generators_.size(); i++)
-    if (generators_[i]->Duration() > max_time)
-      max_time = generators_[i]->Duration();
-
-  // generate profiles with max time
-  for (unsigned int i=0; i<generators_.size(); i++)
-    generators_[i]->SetProfileDuration(traj_in.points[0].positions[i], traj_in.points[1].positions[i], max_time);
-
-  // copy results in trajectory message
-  std::vector<double> pos(generators_.size()), vel(generators_.size()), acc(generators_.size());
-  unsigned int steps = fmax(10, (unsigned int)(max_time / 0.1));
-  traj_out.points.resize(steps+1);
-  double time = 0;
-  for (unsigned int s=0; s<=steps; s++){
-    for (unsigned int i=0; i<generators_.size(); i++){
-      pos[i] = generators_[i]->Pos(time);
-      vel[i] = generators_[i]->Vel(time);
-      acc[i] = generators_[i]->Acc(time);
-    }
-    traj_out.points[s].positions = pos;
-    traj_out.points[s].velocities = vel;
-    traj_out.points[s].accelerations = acc;
-    traj_out.points[s].time_from_start = traj_in.points[0].time_from_start + ros::Duration(time);
-    time += max_time/(double)steps;
+  cout << "Trajectory:" << endl;
+  cout << " - Joints: " << endl;
+  for (unsigned int i=0; i<traj.joint_names.size(); i++)
+    cout << "    - " << traj.joint_names[i] << endl;
+  cout << " - Points: " << endl;
+  for (unsigned int i=0; i<traj.points.size(); i++){
+    cout << "     - Positions: " << endl;
+    for (unsigned int j=0; j<traj.points[i].positions.size(); j++)
+      cout << "      - " << traj.points[i].positions[j] << endl;
+    cout << "     - Velocities: " << endl;
+    for (unsigned int j=0; j<traj.points[i].velocities.size(); j++)
+      cout << "      - " << traj.points[i].velocities[j] << endl;
+    cout << "     - Accelerations: " << endl;
+    for (unsigned int j=0; j<traj.points[i].accelerations.size(); j++)
+      cout << "      - " << traj.points[i].accelerations[j] << endl;
   }
 }
 
 
 
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "trajectory_generation_test");
+
+  // create test trajectory
+  trajectory_msgs::JointTrajectory traj_in, traj_out;;
+  traj_in.header.stamp = ros::Time::now();
+  traj_in.joint_names.resize(3);
+  traj_in.joint_names[0] = "wim1";
+  traj_in.joint_names[1] = "wim2";
+  traj_in.joint_names[2] = "wim3";
+  traj_in.points.resize(2);
+
+  traj_in.points[0].positions.resize(3);
+  traj_in.points[0].time_from_start = ros::Duration(0.0);
+  traj_in.points[0].positions[0] = 0.0;
+  traj_in.points[0].positions[1] = 0.0;
+  traj_in.points[0].positions[2] = 0.0;
+
+  traj_in.points[1].positions.resize(3);
+  traj_in.points[1].time_from_start = ros::Duration(2.0);
+  traj_in.points[1].positions[0] = 1.0;
+  traj_in.points[1].positions[1] = 1.0;
+  traj_in.points[1].positions[2] = 1.0;
+  printTraj(traj_in);
+
+  // create trajectory generator
+  trajectory::TrajectoryGenerator generator(0.1, 0.5, 3);
+  generator.generate(traj_in, traj_out);
+  printTraj(traj_out);
+  
+  return 0;
 }
