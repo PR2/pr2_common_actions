@@ -32,7 +32,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import roslib
-import signal
 roslib.load_manifest('pr2_plugs_core')
 
 import rospy
@@ -46,30 +45,27 @@ from actionlib_msgs.msg import *
 
 import actionlib
 
+import sys
+
 def main():
-	rospy.init_node("tuck_arms_action_test")
+  rospy.init_node("wiggle_plug_action_test")
 
-	goal = TuckArmsGoal()
-	goal.untuck=False
-	goal.left=False
-	goal.right=False
+  wiggle_plug_client = actionlib.SimpleActionClient('plug_wiggle', WigglePlugAction)
+  wiggle_plug_client.wait_for_server()
 
-	for arg in sys.argv:
-		if arg == 'l' or arg == 'left':
-			goal.left=True
-		elif arg == 'r' or arg == 'right':
-			goal.right=True
-		elif arg == 'u' or arg == 'untuck':
-			goal.untuck=True
-
-	tuck_arms_client = actionlib.SimpleActionClient('tuck_arms', TuckArmsAction)
-	tuck_arms_client.wait_for_server()
-
-	rospy.loginfo("Sending tuck/untuck goal...")
-	tuck_arms_client.send_goal(goal)
-
-	tuck_arms_client.wait_for_result()
-
+  goal = WigglePlugGoal()
+  goal.travel.x = 0.15
+  goal.offset.y = 0.01
+  goal.abort_threshold = 0.02
+  try:
+    goal.travel.x = float(sys.argv[1])
+    print "Pushing in by %f", goal.travel.x
+  except:
+    pass
+  goal.period = rospy.Duration(2.0)
+  goal.move_duration = rospy.Duration(20.0)
+  
+  wiggle_plug_client.send_goal(goal)
 
 if __name__ == "__main__":
 	main()

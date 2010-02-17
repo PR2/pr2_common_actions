@@ -1,0 +1,7 @@
+#goal definition
+geometry_msgs/PoseWithCovarianceStamped pose
+---
+#result definition
+geometry_msgs/PoseWithCovarianceStamped pose
+---
+#feedback

@@ -47,28 +47,15 @@ from actionlib_msgs.msg import *
 import actionlib
 
 def main():
-	rospy.init_node("tuck_arms_action_test")
+	rospy.init_node("detect_wall_norm_test")
 
-	goal = TuckArmsGoal()
-	goal.untuck=False
-	goal.left=False
-	goal.right=False
+	detect_wall_norm = actionlib.SimpleActionClient('detect_wall_norm', DetectWallNormAction)
+	detect_wall_norm.wait_for_server()
 
-	for arg in sys.argv:
-		if arg == 'l' or arg == 'left':
-			goal.left=True
-		elif arg == 'r' or arg == 'right':
-			goal.right=True
-		elif arg == 'u' or arg == 'untuck':
-			goal.untuck=True
+	goal = DetectWallNormGoal()
 
-	tuck_arms_client = actionlib.SimpleActionClient('tuck_arms', TuckArmsAction)
-	tuck_arms_client.wait_for_server()
+	detect_wall_norm.send_goal(goal)
 
-	rospy.loginfo("Sending tuck/untuck goal...")
-	tuck_arms_client.send_goal(goal)
-
-	tuck_arms_client.wait_for_result()
 
 
 if __name__ == "__main__":

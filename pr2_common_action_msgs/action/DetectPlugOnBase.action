@@ -1,0 +1,7 @@
+#goal definition
+---
+#result definition
+geometry_msgs/PoseWithCovarianceStamped pose
+---
+#feedback
+int32 cur_sample

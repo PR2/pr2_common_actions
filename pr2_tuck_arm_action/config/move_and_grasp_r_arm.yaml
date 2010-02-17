@@ -1,0 +1,16 @@
+arm: r
+ik_action_name: arm_ik
+plug_frame: plug_frame_base_filtered
+use_preferred_grip_orientation: false
+grip_angle_offset: 0.24
+plug_frame_x_offset: -0.025
+plug_frame_y_offset: 0.00
+plug_frame_z_offset: 0.009
+pose_suggestion:
+  shoulder_pan: -0.797
+  shoulder_lift: 0.710
+  upper_arm_roll: -2.37
+  elbow_flex: -1.83
+  forearm_roll: 0.520
+  wrist_flex: -0.122
+  wrist_roll: 0.138
