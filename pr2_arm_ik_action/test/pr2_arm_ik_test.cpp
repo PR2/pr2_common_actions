@@ -9,7 +9,7 @@ int main (int argc, char **argv)
 
   // create the action client                                                                                                            
   // true causes the client to spin it's own thread                                                                                      
-  actionlib::SimpleActionClient<pr2_common_action_msgs::PR2ArmIKAction> ac("pr2_arm_ik", true);
+  actionlib::SimpleActionClient<pr2_common_action_msgs::PR2ArmIKAction> ac("arm_ik", true);
 
   ROS_INFO("Waiting for action server to start.");
   // wait for the action server to start                                                                                                 
@@ -37,7 +37,7 @@ int main (int argc, char **argv)
   goal.ik_seed.name.push_back("r_wrist_roll_joint");
   goal.ik_seed.position.push_back(-1.46);
   goal.ik_seed.position.push_back(1.09);
-  goal.ik_seed.position.push_back(-2.58);
+  goal.ik_seed.position.push_back(-6.58);
   goal.ik_seed.position.push_back(-1.73);
   goal.ik_seed.position.push_back(4.82);
   goal.ik_seed.position.push_back(-0.46);

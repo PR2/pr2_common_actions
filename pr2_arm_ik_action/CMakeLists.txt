@@ -26,6 +26,11 @@ rosbuild_add_executable(pr2_arm_ik_test test/pr2_arm_ik_test.cpp)
 rosbuild_add_executable(trajectory_generation_test test/trajectory_generation_test.cpp)
 target_link_libraries(trajectory_generation_test ${PROJECT_NAME})
 
+rosbuild_add_executable(trajectory_unwrap_test EXCLUDE_FROM_ALL test/trajectory_unwrap_test.cpp include/pr2_arm_ik_action/trajectory_unwrap.h)
+rosbuild_add_gtest_build_flags(trajectory_unwrap_test)
+rosbuild_add_rostest(test/trajectory_unwrap_test.launch)
+
+
 #common commands for building c++ executables and libraries
 rosbuild_add_library(${PROJECT_NAME} src/trajectory_generation.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)

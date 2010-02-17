@@ -245,7 +245,7 @@ public:
     }
 
 
-    ROS_INFO("trjectory duration %f", traj_goal.trajectory.points[0].time_from_start.toSec());
+    ROS_INFO("trajectory duration %f", traj_goal.trajectory.points[0].time_from_start.toSec());
 
     ROS_DEBUG("sending goal");
     // Send goal
