@@ -25,7 +25,7 @@ rosbuild_add_executable(arm_ik src/arm_ik.cpp)
 rosbuild_add_executable(pr2_arm_ik_test test/pr2_arm_ik_test.cpp)
 
 #common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
+rosbuild_add_library(${PROJECT_NAME} src/trajectory_generation.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
