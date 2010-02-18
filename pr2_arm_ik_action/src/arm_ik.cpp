@@ -183,7 +183,7 @@ public:
     traj_state.request.time = ros::Time::now() + ros::Duration(0.02);
     if (!query_traj_srv_.call(traj_state))
     {
-      ROS_INFO("%s: Aborted: service call to query controller trajectory failed", action_name_.c_str());
+      ROS_ERROR("%s: Aborted: service call to query controller trajectory failed", action_name_.c_str());
       //set the action state to aborted                                                                    
       as_.setAborted(result_);
       return;
@@ -245,7 +245,7 @@ public:
     trajectory_action_->waitForResult();
     if(trajectory_action_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
       {
-	ROS_INFO("%s: Aborted: trajectory action failed to achieve goal", action_name_.c_str());
+	ROS_ERROR("%s: Aborted: trajectory action failed to achieve goal", action_name_.c_str());
 	//set the action state to aborted                                                                    
 	as_.setAborted(result_);
         return;
