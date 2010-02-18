@@ -223,21 +223,22 @@ public:
 
     //unwrap angles   
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
-    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
+
 
     //Compute the duration of the trajectory                                                    
     if(goal.move_duration == ros::Duration(0.0)) {
 	    double dist = 0;
+            ROS_INFO("computing duration");
 	    for(int i=0; i < dimension_; i++)
-		    dist = pow(traj_goal.trajectory.points[0].positions[i] - traj_state.response.position[i],2)+dist;
+		    dist = pow(traj_goal.trajectory.points[1].positions[i] - traj_state.response.position[i],2)+dist;
 	    dist = sqrt(dist);
-	    traj_goal.trajectory.points[0].time_from_start = ros::Duration(dist / max_velocity_);
+	    traj_goal.trajectory.points[1].time_from_start = ros::Duration(dist / max_velocity_);
     } else {
-	    traj_goal.trajectory.points[0].time_from_start = goal.move_duration;
+	    traj_goal.trajectory.points[1].time_from_start = goal.move_duration;
     }
 
-
-    ROS_INFO("trajectory duration %f", traj_goal.trajectory.points[0].time_from_start.toSec());
+    //    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
+    ROS_INFO("trajectory duration %f", traj_goal.trajectory.points[1].time_from_start.toSec());
 
     ROS_DEBUG("sending goal");
     // Send goal
