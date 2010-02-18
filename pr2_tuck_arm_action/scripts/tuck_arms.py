@@ -47,6 +47,7 @@ import time
 from trajectory_msgs.msg import *
 from pr2_common_action_msgs.msg import *
 from actionlib_msgs.msg import *
+from pr2_controllers_msgs.msg import *
 import actionlib
 
 # Joint names
