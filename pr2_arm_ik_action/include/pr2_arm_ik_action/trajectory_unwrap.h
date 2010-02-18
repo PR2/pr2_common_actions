@@ -64,7 +64,8 @@ void unwrap(urdf::Model &robot_model, const trajectory_msgs::JointTrajectory& tr
       for(int j=1; j<traj_pnts; j++)
       {
         double diff;
-        angles::shortest_angular_distance_with_limits(traj_in.points[j-1].positions[i], traj_in.points[j].positions[i], joint->limits->lower, joint->limits->upper, diff);
+
+        angles::shortest_angular_distance_with_limits(traj_out.points[j-1].positions[i], traj_out.points[j].positions[i], joint->limits->lower, joint->limits->upper, diff);
         traj_out.points[j].positions[i] = traj_out.points[j-1].positions[i] + diff;
       }
     }
@@ -72,7 +73,7 @@ void unwrap(urdf::Model &robot_model, const trajectory_msgs::JointTrajectory& tr
     {
       for(int j=1; j<traj_pnts; j++)
       {
-        traj_out.points[j].positions[i] = traj_out.points[j-1].positions[i] + angles::shortest_angular_distance(traj_in.points[j-1].positions[i],traj_in.points[j].positions[i]);
+        traj_out.points[j].positions[i] = traj_out.points[j-1].positions[i] + angles::shortest_angular_distance(traj_out.points[j-1].positions[i],traj_out.points[j].positions[i]);
       }
     }
   }

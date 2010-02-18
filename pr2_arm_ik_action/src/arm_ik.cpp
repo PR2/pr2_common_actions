@@ -116,21 +116,20 @@ public:
 	exit(1);
       }
 
-    // Init pose suggestion                                                                                                                                 
+    // Init pose suggestion              
     jnt_pos_suggestion_.resize(dimension_);
     getSuggestion();
 
     ros::NodeHandle nh_toplevel;
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
-
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_action", true);
     while(!trajectory_action_->waitForServer(ros::Duration(5.0)))
       {
-	ROS_INFO("Waiting for trajectory_action action server to come up");
+	ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
       }
 
     //subscribe to the data topic of interest                                                            
-    ROS_INFO("%s: Initialized", action_name_.c_str() );
+    ROS_INFO("%s: Initialized", action_name_.c_str());
   }
 
   ~PR2ArmIKAction(void)

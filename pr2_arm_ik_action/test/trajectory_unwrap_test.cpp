@@ -77,12 +77,15 @@ TEST(TrajectoryUnwarp, single_unwrap)
   traj_expected.points[1].positions[0]=-0.566371;
   trajectory_unwrap::unwrap(robot, traj_in, traj_out);
  
-  for(int i=0; i<traj_out.points.size(); i++)
+  int points_size = traj_out.points.size();
+  int num_jnts = traj_out.points[0].positions.size();
+
+  for(int i=0; i<points_size; i++)
   {
-    for(int j=0; j<traj_out.points[i].positions.size(); j++)
+    for(int j=0; j<num_jnts; j++)
     {
       EXPECT_NEAR(traj_expected.points[i].positions[j],traj_out.points[i].positions[j], epsilon);
-    } 
+    }
   }
 }
 
@@ -107,14 +110,85 @@ TEST(TrajectoryUnwarp, double_unwrap)
   traj_expected.points[1].positions[1]= 5.71682;
   trajectory_unwrap::unwrap(robot, traj_in, traj_out);
 
-  for(int i=0; i<traj_out.points.size(); i++)
+  int points_size = traj_out.points.size();
+  int num_jnts = traj_out.points[0].positions.size();
+
+  for(int i=0; i<points_size; i++)
   {
-    for(int j=0; j<traj_out.points[i].positions.size(); j++)
+    for(int j=0; j<num_jnts; j++)
     {
       EXPECT_NEAR(traj_expected.points[i].positions[j],traj_out.points[i].positions[j], epsilon);
     }
   }
 }
+
+TEST(TrajectoryUnwarp, multipoint_unwrap)
+{
+  double epsilon = 1e-4;
+  urdf::Model robot;
+  EXPECT_TRUE(get_model(robot));
+
+  trajectory_msgs::JointTrajectory traj_in, traj_out, traj_expected;
+
+  traj_in.points.resize(3);
+  traj_in.joint_names.push_back("joint1");
+  traj_in.joint_names.push_back("joint3");
+  traj_in.points[0].positions.push_back(0.0);
+  traj_in.points[0].positions.push_back(6.10);
+  traj_in.points[1].positions.push_back(12.0);
+  traj_in.points[1].positions.push_back(12.0);
+  traj_in.points[2].positions.push_back(1.5);
+  traj_in.points[2].positions.push_back(1.5);
+
+  traj_expected =traj_in;
+  traj_expected.points[1].positions[0]=-0.566371;
+  traj_expected.points[1].positions[1]= 5.71682;
+  traj_expected.points[2].positions[1]= 7.78318;
+  trajectory_unwrap::unwrap(robot, traj_in, traj_out);
+
+  int points_size = traj_out.points.size();
+  int num_jnts = traj_out.points[0].positions.size();
+
+  for(int i=0; i<points_size; i++)
+  {
+    for(int j=0; j<num_jnts; j++)
+    {
+      EXPECT_NEAR(traj_expected.points[i].positions[j],traj_out.points[i].positions[j], epsilon);
+    }
+  }
+}
+
+TEST(TrajectoryUnwarp, near_limit_unwrap)
+{
+  double epsilon = 1e-4;
+  urdf::Model robot;
+  EXPECT_TRUE(get_model(robot));
+
+  trajectory_msgs::JointTrajectory traj_in, traj_out, traj_expected;
+
+  traj_in.points.resize(3);
+  traj_in.joint_names.push_back("joint2");
+  traj_in.points[0].positions.push_back(-1.5);
+  traj_in.points[1].positions.push_back(-3.5);
+  traj_in.points[2].positions.push_back(1.7);
+
+  traj_expected =traj_in;
+  traj_expected.points[1].positions[0]= 2.78318;
+  traj_expected.points[2].positions[0]= 1.7;
+  trajectory_unwrap::unwrap(robot, traj_in, traj_out);
+
+  int points_size = traj_out.points.size();
+  int num_jnts = traj_out.points[0].positions.size();
+
+  for(int i=0; i<points_size; i++)
+  {
+    for(int j=0; j<num_jnts; j++)
+    {
+      EXPECT_NEAR(traj_expected.points[i].positions[j],traj_out.points[i].positions[j], epsilon);
+    }
+  }
+}
+
 
 
 
