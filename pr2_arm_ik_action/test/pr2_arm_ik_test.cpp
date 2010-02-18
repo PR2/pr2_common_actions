@@ -25,8 +25,8 @@ int main (int argc, char **argv)
   goal.pose.pose.orientation.z = 0.0;
   goal.pose.pose.orientation.w = 1.0;
   goal.pose.pose.position.x = 0.5;
-  goal.pose.pose.position.y = -0.2;
-  goal.pose.pose.position.z = 0.3;
+  goal.pose.pose.position.y = -0.1;
+  goal.pose.pose.position.z = 0.5;
   goal.ik_timeout = ros::Duration(5.0);
   goal.ik_seed.name.push_back("r_shoulder_pan_joint");
   goal.ik_seed.name.push_back("r_shoulder_lift_joint");
@@ -42,7 +42,7 @@ int main (int argc, char **argv)
   goal.ik_seed.position.push_back(4.82);
   goal.ik_seed.position.push_back(-0.46);
   goal.ik_seed.position.push_back(-4.72);
-  
+  goal.move_duration= ros::Duration(1.0);
   ac.sendGoal(goal);
 
   //wait for the action to return                                                                                                        

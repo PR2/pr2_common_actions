@@ -22,6 +22,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 rosbuild_add_executable(arm_ik src/arm_ik.cpp include/pr2_arm_ik_action/trajectory_unwrap.h)
+target_link_libraries(arm_ik ${PROJECT_NAME})
 rosbuild_add_executable(pr2_arm_ik_test test/pr2_arm_ik_test.cpp)
 rosbuild_add_executable(trajectory_generation_test test/trajectory_generation_test.cpp)
 target_link_libraries(trajectory_generation_test ${PROJECT_NAME})

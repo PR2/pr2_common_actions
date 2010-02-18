@@ -44,6 +44,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <pr2_arm_ik/pr2_arm_ik_solver.h>
 #include <pr2_arm_ik_action/trajectory_unwrap.h>
+#include <pr2_arm_ik_action/trajectory_generation.h>
 
 #include <pr2_common_action_msgs/PR2ArmIKAction.h>
 
@@ -56,7 +57,8 @@ public:
     nh_("~"),
     dimension_(7),
     action_name_(name),
-    as_(name)
+    as_(name),
+    generator_(5.0, 0.5, dimension_)
   {
     //register the goal and feeback callbacks                                                            
     as_.registerGoalCallback(boost::bind(&PR2ArmIKAction::goalCB, this));
@@ -221,9 +223,7 @@ public:
 
     //unwrap angles   
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
-
-    // Throw away initial point
-    traj_goal.trajectory.points.erase(traj_goal.trajectory.points.begin());
+    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
 
     //Compute the duration of the trajectory                                                    
     if(goal.move_duration == ros::Duration(0.0)) {
@@ -309,7 +309,7 @@ protected:
   ros::ServiceClient query_traj_srv_;
 
   pr2_common_action_msgs::PR2ArmIKResult result_;
-
+  trajectory::TrajectoryGenerator generator_;
 
 };
 
