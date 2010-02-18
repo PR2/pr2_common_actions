@@ -180,7 +180,7 @@ public:
     //Before we compute IK find out our current jnt pose                                                                                                    
     //The current pose will be the IK pose suggestion                                                                                                       
     pr2_controllers_msgs::QueryTrajectoryState traj_state;
-    traj_state.request.time = ros::Time::now() + ros::Duration(0.02);
+    traj_state.request.time = ros::Time::now();
     if (!query_traj_srv_.call(traj_state))
     {
       ROS_ERROR("%s: Aborted: service call to query controller trajectory failed", action_name_.c_str());
@@ -223,7 +223,6 @@ public:
 
     //unwrap angles   
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
-
 
     //Compute the duration of the trajectory                                                    
     if(goal.move_duration == ros::Duration(0.0)) {
