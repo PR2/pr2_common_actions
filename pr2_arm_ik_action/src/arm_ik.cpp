@@ -194,7 +194,7 @@ public:
     bool is_valid = (pr2_arm_ik_solver_->CartToJntSearch(jnt_pos_suggestion_, desired_pose, jnt_pos_out, timeout_)>=0);
     if(!is_valid)
     {
-      ROS_DEBUG("%s: Aborted: IK invalid", action_name_.c_str());
+      ROS_ERROR("%s: Aborted: IK invalid", action_name_.c_str());
       //set the action state to aborted                                                       
       as_.setAborted(result_);
       return;
