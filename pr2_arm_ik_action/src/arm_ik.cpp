@@ -45,7 +45,6 @@
 #include <pr2_arm_ik/pr2_arm_ik_solver.h>
 #include <pr2_arm_ik_action/trajectory_unwrap.h>
 #include <pr2_arm_ik_action/trajectory_generation.h>
-
 #include <pr2_common_action_msgs/PR2ArmIKAction.h>
 
 class PR2ArmIKAction
@@ -120,17 +119,15 @@ public:
 
     // Init pose suggestion              
     jnt_pos_suggestion_.resize(dimension_);
-    getSuggestion();
 
     ros::NodeHandle nh_toplevel;
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_action", true);
     while(!trajectory_action_->waitForServer(ros::Duration(5.0)))
-      {
-	ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
-      }
-
-    //subscribe to the data topic of interest                                                            
+    {
+      ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
+    }
+    //Action ready
     ROS_INFO("%s: Initialized", action_name_.c_str());
   }
 
@@ -155,6 +152,7 @@ public:
     geometry_msgs::PoseStamped temp_pose_msg;
     temp_pose_msg.pose = goal.pose.pose;
     temp_pose_msg.header = goal.pose.header;
+
     //Try to transform the pose to the root link frame                                                                                                      
     bool ret1 = false;
     tf::Stamped<tf::Pose> tf_pose_stamped;
@@ -164,8 +162,7 @@ public:
       std::string error_msg;
       ret1 = tf_.waitForTransform(root_name_, goal.pose.header.frame_id, goal.pose.header.stamp,
 				  ros::Duration(5.0), ros::Duration(0.01), &error_msg);
-
-      // Transforms the pose into the root link frame                                                                                                       
+      // Transforms the pose into the root link frame   
       tf::poseStampedMsgToTF(temp_pose_msg, tf_pose_stamped);
       tf_.transformPose(root_name_, tf_pose_stamped, tf_pose_stamped);
     }
@@ -177,8 +174,7 @@ public:
     KDL::Frame desired_pose;
     tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
 
-    //Before we compute IK find out our current jnt pose                                                                                                    
-    //The current pose will be the IK pose suggestion                                                                                                       
+
     pr2_controllers_msgs::QueryTrajectoryState traj_state;
     traj_state.request.time = ros::Time::now();
     if (!query_traj_srv_.call(traj_state))
@@ -188,8 +184,12 @@ public:
       as_.setAborted(result_);
       return;
     }
+    //get the IK seed 
     for(int i=0; i < dimension_; i++)
+    {
       jnt_pos_suggestion_(getJointIndex(goal.ik_seed.name[i])) = goal.ik_seed.position[i];
+    }
+
     ROS_DEBUG("calling IK solver");
     KDL::JntArray jnt_pos_out;
     bool is_valid = (pr2_arm_ik_solver_->CartToJntSearch(jnt_pos_suggestion_, desired_pose, jnt_pos_out, timeout_)>=0);
@@ -200,13 +200,14 @@ public:
       as_.setAborted(result_);
       return;
     }
-    ROS_DEBUG("got valid IK");
 
     //Now put the jnt commands back in the correct order for    
     //the trajectory controller      
     std::vector<double> traj_desired(dimension_);
     for(int i=0; i < dimension_; i++)
+    {
       traj_desired[i] = jnt_pos_out(getJointIndex(traj_state.response.name[i]));
+    }
 
     pr2_controllers_msgs::JointTrajectoryGoal traj_goal ;
     std::vector<double> velocities(dimension_, 0.0);
@@ -219,27 +220,28 @@ public:
 
     traj_goal.trajectory.points[1].positions = traj_desired;
     traj_goal.trajectory.points[1].velocities = velocities;
-    ROS_DEBUG("filled out trjectory");
+    ROS_DEBUG("filled out trajectory");
 
     //unwrap angles   
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);  
 
     //Compute the duration of the trajectory                                                    
-    if(goal.move_duration == ros::Duration(0.0)) {
+    if(goal.move_duration == ros::Duration(0.0)) 
+    {
 	    double dist = 0;
-            ROS_INFO("computing duration");
 	    for(int i=0; i < dimension_; i++)
 		    dist = pow(traj_goal.trajectory.points[1].positions[i] - traj_state.response.position[i],2)+dist;
 	    dist = sqrt(dist);
 	    traj_goal.trajectory.points[1].time_from_start = ros::Duration(dist / max_velocity_);
-    } else {
+    } 
+    else 
+    {
 	    traj_goal.trajectory.points[1].time_from_start = goal.move_duration;
     }
 
     //    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
-    ROS_INFO("trajectory duration %f", traj_goal.trajectory.points[1].time_from_start.toSec());
+    ROS_DEBUG("trajectory duration %f", traj_goal.trajectory.points[1].time_from_start.toSec());
 
-    ROS_DEBUG("sending goal");
     // Send goal
     trajectory_action_->sendGoal(traj_goal);
     trajectory_action_->waitForResult();
@@ -254,19 +256,8 @@ public:
     ROS_INFO("%s: Succeeded", action_name_.c_str());
     // set the action state to succeeded                                                      
     as_.setSucceeded(result_);
-
   }
 
-  void getSuggestion()
-  {
-    nh_.getParamCached("pose_suggestion/shoulder_pan", jnt_pos_suggestion_(getJointIndex(arm_+"_shoulder_pan_joint")) );
-    nh_.getParamCached("pose_suggestion/shoulder_lift", jnt_pos_suggestion_(getJointIndex(arm_+"_shoulder_lift_joint")) );
-    nh_.getParamCached("pose_suggestion/upper_arm_roll", jnt_pos_suggestion_(getJointIndex(arm_+"_upper_arm_roll_joint")) );
-    nh_.getParamCached("pose_suggestion/elbow_flex", jnt_pos_suggestion_(getJointIndex(arm_+"_elbow_flex_joint")) );
-    nh_.getParamCached("pose_suggestion/forearm_roll", jnt_pos_suggestion_(getJointIndex(arm_+"_forearm_roll_joint")) );
-    nh_.getParamCached("pose_suggestion/wrist_flex", jnt_pos_suggestion_(getJointIndex(arm_+"_wrist_flex_joint")) );
-    nh_.getParamCached("pose_suggestion/wrist_roll", jnt_pos_suggestion_(getJointIndex(arm_+"_wrist_roll_joint")) );
-  }
 
   int getJointIndex(const std::string &name)
   {
