@@ -239,8 +239,8 @@ public:
 	    traj_goal.trajectory.points[1].time_from_start = goal.move_duration;
     }
 
-    //    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
-    ROS_DEBUG("trajectory duration %f", traj_goal.trajectory.points[1].time_from_start.toSec());
+    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
+    ROS_DEBUG("trajectory duration %f", traj_goal.trajectory.points.back().time_from_start.toSec());
 
     // Send goal
     trajectory_action_->sendGoal(traj_goal);
