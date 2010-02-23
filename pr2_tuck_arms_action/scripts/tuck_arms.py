@@ -66,6 +66,9 @@ l_arm_tuck_traj = [[5.0,  0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
 r_arm_tuck_traj = [[5.0, -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
 		   [10,  -0.4,  0.0,   0.0,  -2.05,  0.0,  -1.02, 2.51],
 		   [15,   0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51]]
+r_arm_tuck_single_traj = [[4.0, -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+			  [6,  -0.4,  0.0,   0.0,  -2.05,  0.0,  -1.02, 2.51],
+			  [10,   0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51]]
 
 
 # Untuck trajctory
@@ -78,6 +81,9 @@ r_arm_untuck_traj = [[5,     0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51],
 		     [10,   -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
 		     [15,   -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
 		     [17,   -0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
+
+r_arm_untuck_single_traj = [[2,     0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51],
+			    [10,   -0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
 # Clear trajectory
 l_arm_clear_traj = [[5.0,  0.4,  1.0,  0.0,  -2.05,  0.0,  -0.1,  0.0]]
@@ -103,7 +109,11 @@ class TuckArmsActionServer:
 		result.right = True
 
 		if not goal.untuck:
-			if goal.right:
+			if goal.right and not goal.left:
+				rospy.loginfo("Tucking only right arm")
+				self.go('r', r_arm_tuck_single_traj)
+
+			if goal.right and goal.left:
 				rospy.loginfo("Tucking right arm")
 				self.go('r', r_arm_tuck_traj)
 			if goal.left:
@@ -111,19 +121,24 @@ class TuckArmsActionServer:
 				self.go('l', l_arm_tuck_traj)
 		else:
 			if self.tucked:
-				if goal.right:
+
+				if goal.right and not goal.left:
+					rospy.loginfo("Untucking only right arm")
+					self.go('r', r_arm_untuck_single_traj)
+
+				if goal.right and goal.left:
 					rospy.loginfo("Untucking right arm")
 					self.go('r', r_arm_untuck_traj)
 
-				if goal.left or goal.right:
+				if goal.left:
 					rospy.loginfo("Untucking left arm")
 					self.go('l', l_arm_untuck_traj)
 			else:
-				if goal.right:
+				if goal.right or goal.left:
 					rospy.loginfo("Clearing right arm")
 					self.go('r', r_arm_clear_traj)
 
-				if goal.left or goal.right:
+				if goal.left:
 					rospy.loginfo("Clearing left arm")
 					self.go('l', l_arm_clear_traj)
 
