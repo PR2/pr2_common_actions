@@ -33,7 +33,7 @@
 
 import roslib
 import signal
-roslib.load_manifest('pr2_tuck_arm_action')
+roslib.load_manifest('pr2_tuck_arms_action')
 
 import rospy
 
@@ -41,8 +41,8 @@ import os
 import sys
 import time
 
-from pr2_plugs_msgs.msg import *
 from actionlib_msgs.msg import *
+from pr2_common_action_msgs.msg import *
 
 import actionlib
 

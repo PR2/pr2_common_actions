@@ -36,7 +36,7 @@
 
 import roslib
 import signal
-roslib.load_manifest('pr2_tuck_arm_action')
+roslib.load_manifest('pr2_tuck_arms_action')
 
 import rospy
 
@@ -53,35 +53,35 @@ import actionlib
 
 # Joint names
 joint_names = ["shoulder_pan", 
-							 "shoulder_lift",
-							 "upper_arm_roll",
-							 "elbow_flex", 
-							 "forearm_roll",
-							 "wrist_flex", 
-							 "wrist_roll" ]
+	       "shoulder_lift",
+	       "upper_arm_roll",
+	       "elbow_flex", 
+	       "forearm_roll",
+	       "wrist_flex", 
+	       "wrist_roll" ]
 
 # Tuck trajectory
-r_arm_tuck_traj = [[5.0, -0.4,0.0,0.0,-2.05,0.0,-0.1,0.0],
-									 [10.0, -0.01,1.35,-1.92,-1.68, 1.35,-0.18,0.31]]
+l_arm_tuck_traj = [[5.0,  0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+		   [10.0, 0.01, 1.35,  1.92, -1.68, -1.35, -0.18, 0.31]]
+r_arm_tuck_traj = [[5.0, -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+		   [10,  -0.4,  0.0,   0.0,  -2.05,  0.0,  -1.02, 2.51],
+		   [15,   0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51]]
 
-l_arm_tuck_traj = [[5.0, 0.4,0.0,0.0,-2.05,0.0,-0.1,0.0],
-									 [10, 0.4,0.0,0.0,-2.05,0.0,-1.02,2.51],
-									 [15, -0.05,1.31,1.38,-2.06,1.23,-2.02,3.51]]
 
 # Untuck trajctory
-r_arm_untuck_traj = [[5.0, -0.01,1.35,-1.92,-1.68, 1.35,-0.18,0.31],
-										 [10.0, -0.01,1.35,-1.92,-1.68, 1.35,-0.18,0.31],
-										 [15.0, -0.4,0.0,0.0,-2.05,0.0,-0.1,0.0],
-										 [17.0, -0.4,1.0,0.0,-2.05,0.0,-0.1,0.0]]
+l_arm_untuck_traj = [[5.0,   0.01, 1.35,  1.92, -1.68, -1.35, -0.18, 0.31],
+		     [10.0,  0.01, 1.35,  1.92, -1.68, -1.35, -0.18, 0.31],
+		     [15.0,  0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+		     [17.0,  0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
-l_arm_untuck_traj = [[5, -0.05,1.31,1.38,-2.06,1.23,-2.02,3.51],
-										 [10, 0.4,0.0,0.0,-2.05,0.0,-0.1,0.0],
-										 [15, 0.4,0.0,0.0,-2.05,0.0,-0.1,0.0],
-										 [17, 0.4,1.0,0.0,-2.05,0.0,-0.1,0.0]]
+r_arm_untuck_traj = [[5,     0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 3.51],
+		     [10,   -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+		     [15,   -0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0],
+		     [17,   -0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
 # Clear trajectory
-r_arm_clear_traj = [[5.0, -0.4,1.0,0.0,-2.05,0.0,-0.1,0.0]]
-l_arm_clear_traj = [[5.0, 0.4,1.0,0.0,-2.05,0.0,-0.1,0.0]]
+l_arm_clear_traj = [[5.0,  0.4,  1.0,  0.0,  -2.05,  0.0,  -0.1,  0.0]]
+r_arm_clear_traj = [[5.0, -0.4,  1.0,  0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
 class TuckArmsActionServer:
 	def __init__(self, node_name):
@@ -89,18 +89,14 @@ class TuckArmsActionServer:
 		self.tucked = True
 
 		# Get controller name and start joint trajectory action clients
-		controller_name = rospy.get_param('controller_name')
+		controller_name = rospy.get_param('~controller_name', 'arm_controller')
 		self.left_joint_client = client = actionlib.SimpleActionClient('l_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 		self.right_joint_client = client = actionlib.SimpleActionClient('r_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 
 		# Construct action server
-		self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction)
-		self.action_server.register_goal_callback(self.goalCB)
+		self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction, self.executeCB)
 
-	def goalCB(self):
-		# Accept goal
-		goal = self.action_server.accept_new_goal()
-
+	def executeCB(self, goal):
 		# Create a new result
 		result = TuckArmsResult()
 		result.left = True
@@ -160,9 +156,9 @@ class TuckArmsActionServer:
 
 		for p in positions:
 			goal.trajectory.points.append(JointTrajectoryPoint( positions = p[1:],
-																													velocities = [0.0] * (len(p) - 1),
-																													accelerations = [],
-																													time_from_start = rospy.Duration(p[0])))
+									    velocities = [0.0] * (len(p) - 1),
+									    accelerations = [],
+									    time_from_start = rospy.Duration(p[0])))
 
 		goal.trajectory.header.stamp = rospy.get_rostime() + rospy.Duration(0.01)
 
