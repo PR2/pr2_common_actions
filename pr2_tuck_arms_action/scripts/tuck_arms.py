@@ -45,9 +45,10 @@ import sys
 import time
 
 from trajectory_msgs.msg import *
-from pr2_common_action_msgs.msg import *
 from actionlib_msgs.msg import *
 from pr2_controllers_msgs.msg import *
+from pr2_common_action_msgs.msg import *
+
 import actionlib
 
 # Joint names
@@ -88,7 +89,7 @@ class TuckArmsActionServer:
 		self.tucked = True
 
 		# Get controller name and start joint trajectory action clients
-		controller_name = "arm_plugs_controller" #rospy.get_param('controller_name')
+		controller_name = rospy.get_param('controller_name')
 		self.left_joint_client = client = actionlib.SimpleActionClient('l_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 		self.right_joint_client = client = actionlib.SimpleActionClient('r_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 
