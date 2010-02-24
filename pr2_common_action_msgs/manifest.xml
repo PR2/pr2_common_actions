@@ -14,6 +14,7 @@
 
   <export>
     <cpp cflags="-I${prefix}/msg/cpp -I${prefix}/srv/cpp"/>
+    <rosdoc config="rosdoc.yaml" />
   </export>
 
 
