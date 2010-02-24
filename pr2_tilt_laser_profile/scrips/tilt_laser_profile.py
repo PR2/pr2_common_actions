@@ -26,7 +26,6 @@ class laserTiltProfile:
         self.laser_controller_name = laser_controller_name
         self.laser_node_name = laser_node_name
 
-
         # create action server
         self.server = actionlib.simple_action_server.SimpleActionServer(name, LaserTiltProfileAction, self.execute_cb)
 
@@ -110,7 +109,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print_usage()
 
-    name = 'nav_tilt_profile_manager'
+    name = 'tilt_laser_profile'
     rospy.init_node(name)
 
     laser_profile = laserTiltProfile(name, sys.argv[1], sys.argv[2])
