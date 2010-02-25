@@ -93,7 +93,7 @@ r_arm_clear_traj = [[5.0, -0.4,  1.0,  0.0,  -2.05,  0.0,  -0.1,  0.0]]
 class TuckArmsActionServer:
 	def __init__(self, node_name):
 		self.node_name = node_name
-		self.tucked = True
+		self.tucked = False
 
 		# Get controller name and start joint trajectory action clients
 		controller_name = rospy.get_param('~controller_name', 'arm_controller')
