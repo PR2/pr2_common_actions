@@ -123,9 +123,18 @@ public:
     ros::NodeHandle nh_toplevel;
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_action", true);
+    double counter = 0;
     while(!trajectory_action_->waitForServer(ros::Duration(5.0)))
     {
       ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
+      counter++;
+      if(counter > 3)
+      {
+        ROS_ERROR("%s: Aborted: joint_trajectory_action action server took too long to come up", action_name_.c_str());
+        //set the action state to aborted                
+        as_.setAborted(result_);
+        return;
+      }
     }
     //Action ready
     ROS_INFO("%s: Initialized", action_name_.c_str());
