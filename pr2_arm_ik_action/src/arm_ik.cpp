@@ -126,7 +126,7 @@ public:
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_action", true);
     double counter = 0;
-    while(!trajectory_action_->waitForServer(ros::Duration(5.0)))
+    while(!trajectory_action_->waitForServer(ros::Duration(80.0)))
     {
       ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
       counter++;
