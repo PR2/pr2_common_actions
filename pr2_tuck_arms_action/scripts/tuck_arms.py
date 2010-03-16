@@ -100,6 +100,10 @@ class TuckArmsActionServer:
 		self.left_joint_client = client = actionlib.SimpleActionClient('l_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 		self.right_joint_client = client = actionlib.SimpleActionClient('r_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
 
+    # Wait for joint clients to connect
+    self.left_joint_client.wait_for_server()
+    self.right_joint_client.wait_for_server()
+
 		# Construct action server
 		self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction, self.executeCB)
 
