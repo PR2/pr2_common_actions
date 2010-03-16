@@ -15,7 +15,7 @@
   <depend package="pr2_controllers_msgs"/>
   <depend package="pr2_common_action_msgs"/>
   <depend package="tf"/>
-  <depend package="pr2_arm_ik"/>
+  <depend package="pr2_arm_kinematics"/>
 
 </package>
 

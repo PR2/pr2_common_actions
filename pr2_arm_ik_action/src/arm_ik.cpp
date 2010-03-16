@@ -42,7 +42,7 @@
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <pr2_arm_ik/pr2_arm_ik_solver.h>
+#include <pr2_arm_kinematics/pr2_arm_ik_solver.h>
 #include <pr2_arm_ik_action/trajectory_unwrap.h>
 #include <pr2_arm_ik_action/trajectory_generation.h>
 #include <pr2_common_action_msgs/PR2ArmIKAction.h>
@@ -98,7 +98,7 @@ public:
 
 
     ROS_DEBUG("Loading KDL chain");
-    if(!pr2_arm_ik::getKDLChain(xml_string, root_name_, tip_name_, kdl_chain_))
+    if(!pr2_arm_kinematics::getKDLChain(xml_string, root_name_, tip_name_, kdl_chain_))
       {
 	ROS_ERROR("Could not load kdl chain");
 	ros::shutdown();
@@ -110,7 +110,7 @@ public:
     nh_.param("ik_timeout", timeout_, 5.0);
     nh_.param("max_velocity", max_velocity_, 0.5);
     ROS_INFO("Starting arm ik action with search_discretization %f, ik_timeout %f and max_velocity %f", search_discretization_,timeout_,max_velocity_);
-    pr2_arm_ik_solver_.reset(new pr2_arm_ik::PR2ArmIKSolver(robot_model, root_name_, tip_name_, search_discretization_, free_angle_));
+    pr2_arm_ik_solver_.reset(new pr2_arm_kinematics::PR2ArmIKSolver(robot_model, root_name_, tip_name_, search_discretization_, free_angle_));
 
     if(!pr2_arm_ik_solver_->active_)
       {
@@ -301,7 +301,7 @@ protected:
   actionlib::SimpleActionServer<pr2_common_action_msgs::PR2ArmIKAction> as_;
   actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>* trajectory_action_;
 
-  boost::shared_ptr<pr2_arm_ik::PR2ArmIKSolver> pr2_arm_ik_solver_;
+  boost::shared_ptr<pr2_arm_kinematics::PR2ArmIKSolver> pr2_arm_ik_solver_;
   tf::TransformListener tf_;
   ros::ServiceClient query_traj_srv_;
 
