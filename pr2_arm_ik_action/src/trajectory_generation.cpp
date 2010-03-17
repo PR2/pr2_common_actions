@@ -1,3 +1,4 @@
+
 /*********************************************************************       
  * Software License Agreement (BSD License)                                  
  *                                                                           
@@ -58,45 +59,54 @@ void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_
 {
   // default result
   traj_out = traj_in;
+  traj_out.points.clear();
+  trajectory_msgs::JointTrajectory traj_tmp; 
+  traj_tmp.points.resize(1);
+  traj_tmp.points[0].positions.resize(generators_.size());
+  traj_tmp.points[0].velocities.resize(generators_.size());
+  traj_tmp.points[0].accelerations.resize(generators_.size());
 
   // check trajectory message
-  if (traj_in.points.size() != 2 || 
-      traj_in.points[0].positions.size() != generators_.size() ||
-      traj_in.points[1].positions.size() != generators_.size()){
-    ROS_ERROR("Invalid trajectory message");
+  if (traj_in.points.size() < 2){
+    ROS_ERROR("Trajectory message should contain at least two points");
     return;
   }
 
-  // generate initial profiles
-  for (unsigned int i=0; i<generators_.size(); i++)
-    generators_[i]->SetProfile(traj_in.points[0].positions[i], traj_in.points[1].positions[i]);
-
-  // find profile that takes most time
-  double max_time = (traj_in.points[1].time_from_start - traj_in.points[0].time_from_start).toSec();
-  for (unsigned int i=0; i<generators_.size(); i++)
-    if (generators_[i]->Duration() > max_time)
-      max_time = generators_[i]->Duration();
-
-  // generate profiles with max time
-  for (unsigned int i=0; i<generators_.size(); i++)
-    generators_[i]->SetProfileDuration(traj_in.points[0].positions[i], traj_in.points[1].positions[i], max_time);
-
-  // copy results in trajectory message
-  std::vector<double> pos(generators_.size()), vel(generators_.size()), acc(generators_.size());
-  unsigned int steps = fmax(10, (unsigned int)(max_time / 0.1));
-  traj_out.points.resize(steps+1);
-  double time = 0;
-  for (unsigned int s=0; s<=steps; s++){
-    for (unsigned int i=0; i<generators_.size(); i++){
-      pos[i] = generators_[i]->Pos(time);
-      vel[i] = generators_[i]->Vel(time);
-      acc[i] = generators_[i]->Acc(time);
+  for (unsigned int pnt=0; pnt<traj_in.points.size()-1; pnt++){
+    // check
+    if (traj_in.points[pnt].positions.size() != generators_.size() ||
+	traj_in.points[pnt+1].positions.size() != generators_.size()){
+      ROS_ERROR("The point lists in the trajectory do not have the same size as the generators");
+      return;
     }
-    traj_out.points[s].positions = pos;
-    traj_out.points[s].velocities = vel;
-    traj_out.points[s].accelerations = acc;
-    traj_out.points[s].time_from_start = traj_in.points[0].time_from_start + ros::Duration(time);
-    time += max_time/(double)steps;
+
+    // generate initial profiles
+    for (unsigned int i=0; i<generators_.size(); i++)
+      generators_[i]->SetProfile(traj_in.points[pnt].positions[i], traj_in.points[pnt+1].positions[i]);
+
+    // find profile that takes most time
+    double max_time = (traj_in.points[pnt+1].time_from_start - traj_in.points[pnt].time_from_start).toSec();
+    for (unsigned int i=0; i<generators_.size(); i++)
+      if (generators_[i]->Duration() > max_time)
+	max_time = generators_[i]->Duration();
+
+    // generate profiles with max time
+    for (unsigned int i=0; i<generators_.size(); i++)
+      generators_[i]->SetProfileDuration(traj_in.points[pnt].positions[i], traj_in.points[pnt+1].positions[i], max_time);
+
+    // copy results in trajectory message
+    unsigned int steps = fmax(10, (unsigned int)(max_time / 0.1));
+    double time = 0;
+    for (unsigned int s=0; s<=steps; s++){
+      for (unsigned int i=0; i<generators_.size(); i++){
+	traj_tmp.points[0].positions[i] = generators_[i]->Pos(time);
+	traj_tmp.points[0].velocities[i] = generators_[i]->Vel(time);
+	traj_tmp.points[0].accelerations[i] = generators_[i]->Acc(time);
+      }
+      traj_out.points.push_back(traj_tmp.points[0]);
+      traj_out.points[s].time_from_start = traj_in.points[0].time_from_start + ros::Duration(time);
+      time += max_time/(double)steps;
+    }
   }
 }
 

@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   traj_in.joint_names[0] = "wim1";
   traj_in.joint_names[1] = "wim2";
   traj_in.joint_names[2] = "wim3";
-  traj_in.points.resize(2);
+  traj_in.points.resize(3);
 
   traj_in.points[0].positions.resize(3);
   traj_in.points[0].time_from_start = ros::Duration(1.0);
@@ -88,6 +88,12 @@ int main(int argc, char** argv)
   traj_in.points[1].positions[0] = 1.0;
   traj_in.points[1].positions[1] = 1.0;
   traj_in.points[1].positions[2] = 1.0;
+
+  traj_in.points[2].positions.resize(3);
+  traj_in.points[2].time_from_start = ros::Duration(2.0);
+  traj_in.points[2].positions[0] = 2.0;
+  traj_in.points[2].positions[1] = 2.0;
+  traj_in.points[2].positions[2] = 2.0;
   printTraj(traj_in);
 
   // create trajectory generator
