@@ -57,28 +57,29 @@ TrajectoryGenerator::~TrajectoryGenerator()
 
 void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_in, trajectory_msgs::JointTrajectory& traj_out)
 {
+  ROS_INFO("Generating trajectory for list of points of size %d", (int) traj_in.points.size());
+
+  // check trajectory message
+  if (traj_in.points.size() < 2){
+    ROS_WARN("Trajectory message should contain at least two points, but it contains %d joints. Returning original trajectory", (int)traj_in.points.size());
+    traj_out = traj_in;
+    return;
+  }
+
   // default result
-  traj_out = traj_in;
-  traj_out.points.clear();
+  trajectory_msgs::JointTrajectory traj_res = traj_in;
+  traj_res.points.clear();
   trajectory_msgs::JointTrajectory traj_tmp; 
   traj_tmp.points.resize(1);
   traj_tmp.points[0].positions.resize(generators_.size());
   traj_tmp.points[0].velocities.resize(generators_.size());
   traj_tmp.points[0].accelerations.resize(generators_.size());
 
-  // check trajectory message
-  if (traj_in.points.size() < 2){
-    ROS_ERROR("Trajectory message should contain at least two points");
-    traj_out = traj_in;
-    return;
-  }
-
   for (unsigned int pnt=0; pnt<traj_in.points.size()-1; pnt++){
     // check
     if (traj_in.points[pnt].positions.size() != generators_.size() ||
 	traj_in.points[pnt+1].positions.size() != generators_.size()){
       ROS_ERROR("The point lists in the trajectory do not have the same size as the generators");
-      traj_out = traj_in;
       return;
     }
 
@@ -105,11 +106,12 @@ void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_
 	traj_tmp.points[0].velocities[i] = generators_[i]->Vel(time);
 	traj_tmp.points[0].accelerations[i] = generators_[i]->Acc(time);
       }
-      traj_out.points.push_back(traj_tmp.points[0]);
-      traj_out.points[s].time_from_start = traj_in.points[0].time_from_start + ros::Duration(time);
+      traj_res.points.push_back(traj_tmp.points[0]);
+      traj_res.points[s].time_from_start = traj_in.points[0].time_from_start + ros::Duration(time);
       time += max_time/(double)steps;
     }
   }
+  traj_out = traj_res;
 }
 
 
