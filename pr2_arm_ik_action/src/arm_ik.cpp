@@ -42,10 +42,11 @@
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <pr2_arm_ik/pr2_arm_ik_solver.h>
+#include <pr2_arm_kinematics/pr2_arm_ik_solver.h>
 #include <pr2_arm_ik_action/trajectory_unwrap.h>
 #include <pr2_arm_ik_action/trajectory_generation.h>
 #include <pr2_common_action_msgs/PR2ArmIKAction.h>
+#include <kdl/frames_io.hpp>
 
 class PR2ArmIKAction
 {
@@ -97,7 +98,7 @@ public:
 
 
     ROS_DEBUG("Loading KDL chain");
-    if(!pr2_arm_ik::getKDLChain(xml_string, root_name_, tip_name_, kdl_chain_))
+    if(!pr2_arm_kinematics::getKDLChain(xml_string, root_name_, tip_name_, kdl_chain_))
       {
 	ROS_ERROR("Could not load kdl chain");
 	ros::shutdown();
@@ -108,7 +109,8 @@ public:
     nh_.param("search_discretization", search_discretization_, 0.01);
     nh_.param("ik_timeout", timeout_, 5.0);
     nh_.param("max_velocity", max_velocity_, 0.5);
-    pr2_arm_ik_solver_.reset(new pr2_arm_ik::PR2ArmIKSolver(robot_model, root_name_, tip_name_, search_discretization_, free_angle_));
+    ROS_INFO("Starting arm ik action with search_discretization %f, ik_timeout %f and max_velocity %f", search_discretization_,timeout_,max_velocity_);
+    pr2_arm_ik_solver_.reset(new pr2_arm_kinematics::PR2ArmIKSolver(robot_model, root_name_, tip_name_, search_discretization_, free_angle_));
 
     if(!pr2_arm_ik_solver_->active_)
       {
@@ -124,7 +126,7 @@ public:
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_action", true);
     double counter = 0;
-    while(!trajectory_action_->waitForServer(ros::Duration(5.0)))
+    while(!trajectory_action_->waitForServer(ros::Duration(80.0)))
     {
       ROS_INFO("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
       counter++;
@@ -157,11 +159,7 @@ public:
     // accept the new goal                                                      
     pr2_common_action_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
-    
-    geometry_msgs::PoseStamped temp_pose_msg;
-    temp_pose_msg.pose = goal.pose.pose;
-    temp_pose_msg.header = goal.pose.header;
-
+     
     //Try to transform the pose to the root link frame                                                                                                      
     bool ret1 = false;
     tf::Stamped<tf::Pose> tf_pose_stamped;
@@ -172,27 +170,19 @@ public:
       ret1 = tf_.waitForTransform(root_name_, goal.pose.header.frame_id, goal.pose.header.stamp,
 				  ros::Duration(5.0), ros::Duration(0.01), &error_msg);
       // Transforms the pose into the root link frame   
-      tf::poseStampedMsgToTF(temp_pose_msg, tf_pose_stamped);
+      tf::poseStampedMsgToTF(goal.pose, tf_pose_stamped);
       tf_.transformPose(root_name_, tf_pose_stamped, tf_pose_stamped);
     }
     catch(const tf::TransformException &ex)
     {
       ROS_ERROR("Transform failure (%d): %s", ret1, ex.what());
+      as_.setAborted();
       return;
     }
     KDL::Frame desired_pose;
     tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
 
 
-    pr2_controllers_msgs::QueryTrajectoryState traj_state;
-    traj_state.request.time = ros::Time::now();
-    if (!query_traj_srv_.call(traj_state))
-    {
-      ROS_ERROR("%s: Aborted: service call to query controller trajectory failed", action_name_.c_str());
-      //set the action state to aborted                                                                    
-      as_.setAborted(result_);
-      return;
-    }
     //get the IK seed 
     for(int i=0; i < dimension_; i++)
     {
@@ -206,12 +196,19 @@ public:
     {
       ROS_ERROR("%s: Aborted: IK invalid", action_name_.c_str());
       //set the action state to aborted                                                       
-      as_.setAborted(result_);
+      as_.setAborted();
       return;
     }
 
-    //Now put the jnt commands back in the correct order for    
-    //the trajectory controller      
+    //Now put the jnt commands back in the correct order for the trajectory controller      
+    pr2_controllers_msgs::QueryTrajectoryState traj_state;
+    traj_state.request.time = ros::Time::now();
+    if (!query_traj_srv_.call(traj_state))
+    {
+      ROS_ERROR("%s: Aborted: service call to query controller trajectory failed", action_name_.c_str());
+      as_.setAborted(result_);
+      return;
+    }
     std::vector<double> traj_desired(dimension_);
     for(int i=0; i < dimension_; i++)
     {
@@ -304,7 +301,7 @@ protected:
   actionlib::SimpleActionServer<pr2_common_action_msgs::PR2ArmIKAction> as_;
   actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>* trajectory_action_;
 
-  boost::shared_ptr<pr2_arm_ik::PR2ArmIKSolver> pr2_arm_ik_solver_;
+  boost::shared_ptr<pr2_arm_kinematics::PR2ArmIKSolver> pr2_arm_ik_solver_;
   tf::TransformListener tf_;
   ros::ServiceClient query_traj_srv_;
 
