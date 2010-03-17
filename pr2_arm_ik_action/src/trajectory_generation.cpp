@@ -69,6 +69,7 @@ void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_
   // check trajectory message
   if (traj_in.points.size() < 2){
     ROS_ERROR("Trajectory message should contain at least two points");
+    traj_out = traj_in;
     return;
   }
 
@@ -77,6 +78,7 @@ void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_
     if (traj_in.points[pnt].positions.size() != generators_.size() ||
 	traj_in.points[pnt+1].positions.size() != generators_.size()){
       ROS_ERROR("The point lists in the trajectory do not have the same size as the generators");
+      traj_out = traj_in;
       return;
     }
 
