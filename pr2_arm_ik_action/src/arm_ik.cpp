@@ -58,7 +58,7 @@ public:
     dimension_(7),
     action_name_(name),
     as_(name),
-    generator_(5.0, 0.5, dimension_)
+    generator_(2.5, 2.0, dimension_)
   {
     //register the goal and feeback callbacks                                                            
     as_.registerGoalCallback(boost::bind(&PR2ArmIKAction::goalCB, this));
