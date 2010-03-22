@@ -17,6 +17,10 @@
   <depend package="tf"/>
   <depend package="pr2_arm_kinematics"/>
 
+  <export>
+    <cpp cflags="-I${prefix}/include `rosboost-cfg --cflags`" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib `rosboost-cfg --lflags thread` -lpr2_arm_ik_action"/>
+  </export>
+
 </package>
 
 
