@@ -9,9 +9,9 @@
   <depend stack="driver_common" /> <!-- dynamic_reconfigure -->
   <depend stack="geometry" /> <!-- tf -->
   <depend stack="pr2_common" /> <!-- pr2_msgs -->
-  <depend stack="pr2_controllers" /> <!-- trajectory_msgs, pr2_controllers_msgs -->
+  <depend stack="pr2_controllers" /> <!-- trajectory_msgs, joint_trajectory_action, pr2_controllers_msgs -->
   <depend stack="pr2_kinematics" /> <!-- pr2_arm_ik -->
   <depend stack="pr2_mechanism" /> <!-- pr2_mechanism_msgs -->
-  <depend stack="ros" /> <!-- rospy, roscpp -->
+  <depend stack="ros" /> <!-- roslib, rospy, roscpp -->
 
 </stack>
