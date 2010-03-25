@@ -158,7 +158,7 @@ public:
   {
     // accept the new goal                                                      
     pr2_common_action_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
-    ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
+    ROS_DEBUG("%s: Accepted Goal", action_name_.c_str() );
      
     //Try to transform the pose to the root link frame                                                                                                      
     bool ret1 = false;
@@ -259,7 +259,7 @@ public:
         return;
       }
     
-    ROS_INFO("%s: Succeeded", action_name_.c_str());
+    ROS_DEBUG("%s: Succeeded", action_name_.c_str());
     // set the action state to succeeded                                                      
     as_.setSucceeded(result_);
   }
