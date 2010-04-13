@@ -57,15 +57,14 @@ public:
     nh_("~"),
     dimension_(7),
     action_name_(name),
-    as_(name),
-    generator_(2.5, 2.0, dimension_)
+    as_(name)
   {
     //register the goal and feeback callbacks
     as_.registerGoalCallback(boost::bind(&PR2ArmIKAction::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PR2ArmIKAction::preemptCB, this));
 
     // Load Robot Model
-    ROS_DEBUG("Loading robot model");
+    ROS_DEBUG("%s: Loading robot model", action_name_.c_str());
     robot_model.initParam(std::string("robot_description"));
 
     // Get Parameters 
@@ -74,39 +73,39 @@ public:
     nh_.param("free_angle", free_angle_, 2);
     nh_.param("search_discretization", search_discretization_, 0.01);
     nh_.param("ik_timeout", timeout_, 5.0);
-    nh_.param("max_velocity", max_velocity_, 0.5);
+    nh_.param("max_velocity", max_vel_, 2.5);
+    nh_.param("max_acceleration", max_acc_, 2.0);
     root_name_ = "torso_lift_link";
     tip_name_ = arm_ + "_wrist_roll_link";
 
+    // Init pose suggestion
+    jnt_pos_suggestion_.resize(dimension_);
 
-    ROS_DEBUG("Loading KDL chain");
+    ROS_DEBUG("%s: Loading KDL chain", action_name_.c_str());
     KDL::Tree tree;
     if (!kdl_parser::treeFromUrdfModel(robot_model, tree))
     {
-      ROS_ERROR("Could not initialize tree object");
+      ROS_ERROR("%s: Could not load the KDL tree from the robot model", action_name_.c_str());
       ros::shutdown();
       exit(1);
     }
     if (!tree.getChain(root_name_, tip_name_, kdl_chain_))
     {
-      ROS_ERROR("Could not initialize chain object");
+      ROS_ERROR("%s: Could not create the KDL chain", action_name_.c_str());
       ros::shutdown();
       exit(1);
     }
 
     // Init IK
-    ROS_INFO("Starting with search_discretization %f, ik_timeout %f and max_velocity %f", search_discretization_,timeout_,max_velocity_);
+    ROS_INFO("Starting with search_discretization %f, ik_timeout %f and max_velocity %f", search_discretization_,timeout_,max_vel_);
     pr2_arm_ik_solver_.reset(new pr2_arm_kinematics::PR2ArmIKSolver(robot_model, root_name_, tip_name_, search_discretization_, free_angle_));
 
     if(!pr2_arm_ik_solver_->active_)
-      {
-	ROS_ERROR("Could not load ik");
-	ros::shutdown();
-	exit(1);
-      }
-
-    // Init pose suggestion
-    jnt_pos_suggestion_.resize(dimension_);
+    {
+      ROS_ERROR("%s: Could not load pr2 arm IK solver", action_name_.c_str());
+      ros::shutdown();
+      exit(1);
+    }
 
     ros::NodeHandle nh_toplevel;
     query_traj_srv_ = nh_toplevel.serviceClient<pr2_controllers_msgs::QueryTrajectoryState>(arm_controller_+"/query_state");
@@ -118,10 +117,10 @@ public:
       counter++;
       if(counter > 3)
       {
-        ROS_ERROR("%s: Aborted: joint_trajectory_action action server took too long to come up", action_name_.c_str());
+        ROS_ERROR("%s: joint_trajectory_action action server took too long to start", action_name_.c_str());
         //set the action state to aborted
-        as_.setAborted(result_);
-        return;
+        ros::shutdown();
+        exit(1);
       }
     }
     //Action ready
@@ -145,11 +144,11 @@ public:
     // accept the new goal
     pr2_common_action_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
-
+   
     //Try to transform the pose to the root link frame
     bool ret1 = false;
     tf::Stamped<tf::Pose> tf_pose_stamped;
-    ROS_DEBUG("computing transform from the goal to the base link");
+    KDL::Frame desired_pose;
     try
     {
       std::string error_msg;
@@ -158,6 +157,7 @@ public:
       // Transforms the pose into the root link frame
       tf::poseStampedMsgToTF(goal.pose, tf_pose_stamped);
       tf_.transformPose(root_name_, tf_pose_stamped, tf_pose_stamped);
+      tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
     }
     catch(const tf::TransformException &ex)
     {
@@ -165,11 +165,8 @@ public:
       as_.setAborted();
       return;
     }
-    KDL::Frame desired_pose;
-    tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
 
-
-    //get the IK seed
+    // Get the IK seed from the goal 
     for(int i=0; i < dimension_; i++)
     {
       jnt_pos_suggestion_(getJointIndex(goal.ik_seed.name[i])) = goal.ik_seed.position[i];
@@ -195,6 +192,7 @@ public:
       as_.setAborted(result_);
       return;
     }
+
     std::vector<double> traj_desired(dimension_);
     for(int i=0; i < dimension_; i++)
     {
@@ -212,7 +210,6 @@ public:
 
     traj_goal.trajectory.points[1].positions = traj_desired;
     traj_goal.trajectory.points[1].velocities = velocities;
-    ROS_DEBUG("filled out trajectory");
 
     //unwrap angles
     trajectory_unwrap::unwrap(robot_model, traj_goal.trajectory,traj_goal.trajectory);
@@ -220,30 +217,33 @@ public:
     //Compute the duration of the trajectory
     if(goal.move_duration == ros::Duration(0.0))
     {
-	    double dist = 0;
-	    for(int i=0; i < dimension_; i++)
-		    dist = pow(traj_goal.trajectory.points[1].positions[i] - traj_state.response.position[i],2)+dist;
-	    dist = sqrt(dist);
-	    traj_goal.trajectory.points[1].time_from_start = ros::Duration(dist / max_velocity_);
+      double dist = 0;
+      for(int i=0; i < dimension_; i++)
+        dist = pow(traj_goal.trajectory.points[1].positions[i] - traj_state.response.position[i],2)+dist;
+      dist = sqrt(dist);
+      traj_goal.trajectory.points[1].time_from_start = ros::Duration(dist / max_vel_);
     }
     else
     {
-	    traj_goal.trajectory.points[1].time_from_start = goal.move_duration;
+      traj_goal.trajectory.points[1].time_from_start = goal.move_duration;
     }
 
-    generator_.generate(traj_goal.trajectory,traj_goal.trajectory);
-    ROS_DEBUG("trajectory duration %f", traj_goal.trajectory.points.back().time_from_start.toSec());
+    //todo pass into trajectory generator here                                                                       
+    trajectory::TrajectoryGenerator g(max_vel_, max_acc_, dimension_);
+
+    //do the trajectory generation                                                                                   
+    g.generate(traj_goal.trajectory, traj_goal.trajectory);
 
     // Send goal
     trajectory_action_->sendGoal(traj_goal);
     trajectory_action_->waitForResult();
     if(trajectory_action_->getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
-      {
-	ROS_ERROR("%s: Aborted: trajectory action failed to achieve goal", action_name_.c_str());
-	//set the action state to aborted
-	as_.setAborted(result_);
-        return;
-      }
+    {
+      ROS_ERROR("%s: Aborted: trajectory action failed to achieve goal", action_name_.c_str());
+      //set the action state to aborted
+      as_.setAborted(result_);
+      return;
+    }
 
     ROS_INFO("%s: Succeeded", action_name_.c_str());
     // set the action state to succeeded
@@ -278,7 +278,7 @@ protected:
   ros::NodeHandle nh_;
   urdf::Model robot_model;
   int dimension_, free_angle_;
-  double search_discretization_, timeout_, max_velocity_;
+  double search_discretization_, timeout_, max_vel_, max_acc_;
   std::string action_name_, arm_, arm_controller_, root_name_, tip_name_;
 
   KDL::Chain kdl_chain_;
@@ -292,7 +292,6 @@ protected:
   ros::ServiceClient query_traj_srv_;
 
   pr2_common_action_msgs::PR2ArmIKResult result_;
-  trajectory::TrajectoryGenerator generator_;
 
 };
 
