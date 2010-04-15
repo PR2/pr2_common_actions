@@ -61,11 +61,12 @@ joint_names = ["shoulder_pan",
                "wrist_flex", 
                "wrist_roll" ]
 
-l_arm_tucked = [0.01, 1.35,  1.92, -1.68, -1.35, -0.18, 0.31]
-r_arm_tucked = [0.05, 1.31, -1.38, -2.06, -1.23, -2.02, 0.37]
+
+l_arm_tucked = [0.023, 1.290, 1.891, -1.686, -1.351, -0.184, 0.307]
+r_arm_tucked = [0.039, 1.262, -1.366, -2.067, -1.231, -1.998, 0.369]
 l_arm_untucked = [ 0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]
 r_arm_untucked = [-0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]
-r_arm_approach = [-0.4,  1.0,   0.0,  -2.05,  0.0,  -2.02, 0.37]
+r_arm_approach = [0.039, 1.262, 0.0, -2.067, -1.231, -1.998, 0.369]
 r_arm_up_traj = [[-0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
 # Tuck trajectory
@@ -81,6 +82,9 @@ r_arm_untuck_traj = [r_arm_approach,
 # clear trajectory
 l_arm_clear_traj = [l_arm_untucked]
 r_arm_clear_traj = [r_arm_untucked]
+
+move_duration = 2.5
+quit_when_finished = False
 
 class TuckArmsActionServer:
   def __init__(self, node_name):
@@ -253,7 +257,7 @@ class TuckArmsActionServer:
       goal.trajectory.points.append(JointTrajectoryPoint( positions = p,
                                                           velocities = [],
                                                           accelerations = [],
-                                                          time_from_start = rospy.Duration((count+1) * 5)))
+                                                          time_from_start = rospy.Duration((count+1) * move_duration)))
     goal.trajectory.header.stamp = rospy.get_rostime() + rospy.Duration(0.01)
     if wait:
       if not {'l': self.left_joint_client, 'r': self.right_joint_client}[side].send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0)):
@@ -303,9 +307,9 @@ if __name__ == '__main__':
     goal = TuckArmsGoal()
     goal.left = False
     goal.right = False
-    opts, args = getopt.getopt(myargs, 'l:r:', ['left','right'])
+    opts, args = getopt.getopt(myargs, 'ql:r:', ['quit','left','right'])
     for arm, action in opts:
-
+      
       if arm in ('-l', '--left'):
         goal.left = True
         if action in ('tuck', 't'):
@@ -337,18 +341,16 @@ if __name__ == '__main__':
         else:
           rospy.logerr('Unknown option for right arm: %s. Use "tuck" or "untuck"'%action)
           exit()
-
+      if arm in ('--quit', '-q'):
+        quit_when_finished = True
     
-    print 'goal left %u'%goal.left
-    print 'goal right %u'%goal.right
-    print 'goal untuck %u'%goal.untuck
-
     tuck_arm_client = actionlib.SimpleActionClient(action_name, TuckArmsAction)
-    print 'waiting for server'
+    rospy.logdebug('Waiting for action server to start')
     tuck_arm_client.wait_for_server(rospy.Duration(10.0))
-    print 'sending goal'
+    rospy.logdebug('Sending goal to action server')
     tuck_arm_client.send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0))
 
-  rospy.spin()
-
+    if quit_when_finished:
+      exit()
+    rospy.spin()
 
