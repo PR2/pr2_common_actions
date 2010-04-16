@@ -209,6 +209,7 @@ public:
 
     traj_goal.trajectory.points[0].positions = traj_desired;
     traj_goal.trajectory.points[0].velocities = velocities;
+    traj_goal.trajectory.points[0].time_from_start = goal.move_duration;
 
     // Send goal
     trajectory_action_->sendGoal(traj_goal);
