@@ -57,7 +57,7 @@ namespace trajectory{
 
   void TrajectoryGenerator::generate(const trajectory_msgs::JointTrajectory& traj_in, trajectory_msgs::JointTrajectory& traj_out)
   {
-    ROS_DEBUG("Generating trajectory for list of points of size %d", (int) traj_in.points.size());
+    ROS_INFO("Generating trajectory for list of points of size %d", (int) traj_in.points.size());
 
     // check trajectory message
     if (traj_in.points.size() < 2){
