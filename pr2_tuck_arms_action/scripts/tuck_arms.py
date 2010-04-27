@@ -143,7 +143,6 @@ class TuckArmsActionServer:
         else:
           rospy.loginfo('  ...untucking and tucking both arms')
           self.untuckL()
-          self.untuckR()
           self.tuckL()
           self.tuckR()
 
@@ -194,6 +193,7 @@ class TuckArmsActionServer:
         rospy.loginfo("  ...untucking boht arms")
         self.untuckR()
         self.untuckL()
+        self.untuckR()
       elif goal.left:
         rospy.loginfo("Untucking left arm...")
         if self.r_arm_state == 0:
@@ -205,6 +205,7 @@ class TuckArmsActionServer:
           rospy.loginfo("  ...untucking both arms")                    
           self.untuckR()
           self.untuckL()
+          self.untuckR()
 
     # Succeed or fail
     if self.success:
@@ -218,7 +219,7 @@ class TuckArmsActionServer:
       self.action_server.set_aborted(result)
 
 
-  # assumes r cleared
+  # clears r arm
   def tuckL(self):
     if self.l_arm_state != 0:
       self.go('r', r_arm_up_traj)
@@ -227,7 +228,7 @@ class TuckArmsActionServer:
       self.go('l', l_arm_tuck_traj)
       self.go('r', r_arm_clear_traj)
     
-  # assumes r cleared
+  # clears r arm
   def untuckL(self):
     if self.l_arm_state != 1:
       self.go('r', r_arm_up_traj)
@@ -235,7 +236,6 @@ class TuckArmsActionServer:
         self.go('l', l_arm_untuck_traj)
       elif self.l_arm_state == -1:
         self.go('l', l_arm_clear_traj)
-      self.go('r', r_arm_clear_traj)
 
   # assumes l tucked or cleared
   def tuckR(self):
