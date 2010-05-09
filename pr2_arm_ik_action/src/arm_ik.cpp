@@ -56,10 +56,9 @@ public:
     nh_("~"),
     dimension_(7),
     action_name_(name),
-    as_(name)
+    as_(name, boost::bind(&PR2ArmIKAction::executeCB, this, _1))
   {
     //register the goal and feeback callbacks
-    as_.registerGoalCallback(boost::bind(&PR2ArmIKAction::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&PR2ArmIKAction::preemptCB, this));
 
     ros::NodeHandle nh_toplevel;
@@ -118,16 +117,17 @@ public:
       exit(1);
     }
 
-    trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(arm_controller_+"/joint_trajectory_generator_unwrap", true);
+    std::string trajectory_action_name = arm_controller_+"/joint_trajectory_generator_unwrap";
+    trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(trajectory_action_name, true);
 
     double counter = 0;
     while(!trajectory_action_->waitForServer(ros::Duration(80.0)))
     {
-      ROS_DEBUG("%s: Waiting for trajectory_action action server to come up", action_name_.c_str());
+      ROS_DEBUG("%s: Waiting for %s action server to come up", action_name_.c_str(), trajectory_action_name.c_str());
       counter++;
       if(counter > 3)
       {
-        ROS_ERROR("%s: joint_trajectory_action action server took too long to start", action_name_.c_str());
+        ROS_ERROR("%s: %s action server took too long to start", action_name_.c_str(), trajectory_action_name.c_str());
         //set the action state to aborted
         ros::shutdown();
         exit(1);
@@ -146,13 +146,13 @@ public:
   {
     ROS_INFO("%s: Preempt", action_name_.c_str());
     // set the action state to preempted
+    trajectory_action_->cancelGoal();
     as_.setPreempted();
   }
 
-  void goalCB()
+  void executeCB(const pr2_common_action_msgs::PR2ArmIKGoalConstPtr & goal)
   {
     // accept the new goal
-    pr2_common_action_msgs::PR2ArmIKGoal goal = *as_.acceptNewGoal();
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
    
     //Try to transform the pose to the root link frame
@@ -162,10 +162,10 @@ public:
     try
     {
       std::string error_msg;
-      ret1 = tf_.waitForTransform(root_name_, goal.pose.header.frame_id, goal.pose.header.stamp,
+      ret1 = tf_.waitForTransform(root_name_, goal->pose.header.frame_id, goal->pose.header.stamp,
 				  ros::Duration(5.0), ros::Duration(0.01), &error_msg);
       // Transforms the pose into the root link frame
-      tf::poseStampedMsgToTF(goal.pose, tf_pose_stamped);
+      tf::poseStampedMsgToTF(goal->pose, tf_pose_stamped);
       tf_.transformPose(root_name_, tf_pose_stamped, tf_pose_stamped);
       tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
     }
@@ -179,7 +179,7 @@ public:
     // Get the IK seed from the goal 
     for(int i=0; i < dimension_; i++)
     {
-      jnt_pos_suggestion_(getJointIndex(goal.ik_seed.name[i])) = goal.ik_seed.position[i];
+      jnt_pos_suggestion_(getJointIndex(goal->ik_seed.name[i])) = goal->ik_seed.position[i];
     }
 
     ROS_DEBUG("calling IK solver");
@@ -197,8 +197,8 @@ public:
     std::vector<std::string> traj_names(dimension_);
     for(int i=0; i < dimension_; i++)
     {
-      traj_names[i] = goal.ik_seed.name[i];
-      traj_desired[i] = jnt_pos_out(getJointIndex(goal.ik_seed.name[i]));
+      traj_names[i] = goal->ik_seed.name[i];
+      traj_desired[i] = jnt_pos_out(getJointIndex(goal->ik_seed.name[i]));
     }
 
     pr2_controllers_msgs::JointTrajectoryGoal traj_goal ;
@@ -209,7 +209,7 @@ public:
 
     traj_goal.trajectory.points[0].positions = traj_desired;
     traj_goal.trajectory.points[0].velocities = velocities;
-    traj_goal.trajectory.points[0].time_from_start = goal.move_duration;
+    traj_goal.trajectory.points[0].time_from_start = goal->move_duration;
 
     // Send goal
     trajectory_action_->sendGoal(traj_goal);
