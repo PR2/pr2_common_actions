@@ -81,7 +81,7 @@ public:
 
     // Get Parameters 
     nh_.param<std::string>("arm", arm_, "r");
-    nh_.param("joint_action", joint_action_, std::string("joint_trajectory_action"));
+    nh_.param("joint_trajectory_action", joint_action_, std::string("joint_trajectory_action"));
     nh_.param("free_angle", free_angle_, 2);
     nh_.param("search_discretization", search_discretization_, 0.01);
     nh_.param("ik_timeout", timeout_, 5.0);

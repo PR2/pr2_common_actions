@@ -54,12 +54,12 @@ namespace joint_trajectory_generator {
       typedef actionlib::SimpleActionServer<pr2_controllers_msgs::JointTrajectoryAction> JTAS;
       typedef actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction> JTAC;
     public:
-    JointTrajectoryGenerator(std::string name) : as_(ros::NodeHandle(),
-          "generator_action_name",
+    JointTrajectoryGenerator(std::string name) : 
+      as_(ros::NodeHandle(), "joint_trajectory_generator",
           boost::bind(&JointTrajectoryGenerator::executeCb, this, _1),
           false),
-          ac_("joint_trajectory_action"),
-          got_state_(false)
+      ac_("joint_trajectory_action"),
+      got_state_(false)
       {
         ros::NodeHandle n;
         state_sub_ = n.subscribe("state", 1, &JointTrajectoryGenerator::jointStateCb, this);
