@@ -143,6 +143,7 @@ namespace joint_trajectory_generator {
 
             // Apply offset to each point in the trajectory on this joint
             for(unsigned int j=0; j < n_traj_points; j++) {
+	      new_goal.trajectory.points[j+1].time_from_start = goal.trajectory.points[j].time_from_start;
               new_goal.trajectory.points[j+1].positions[i] = goal.trajectory.points[j].positions[i] + offset;
             }
           }
