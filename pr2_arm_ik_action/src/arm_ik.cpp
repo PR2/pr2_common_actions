@@ -81,12 +81,13 @@ public:
 
     // Get Parameters 
     nh_.param<std::string>("arm", arm_, "r");
-    nh_.getParam("arm_controller", arm_controller_ );
+    nh_.param("joint_action", joint_action_, std::string("joint_trajectory_action"));
     nh_.param("free_angle", free_angle_, 2);
     nh_.param("search_discretization", search_discretization_, 0.01);
     nh_.param("ik_timeout", timeout_, 5.0);
     root_name_ = "torso_lift_link";
     tip_name_ = arm_ + "_wrist_roll_link";
+    
 
     // Init pose suggestion
     jnt_pos_suggestion_.resize(dimension_);
@@ -117,7 +118,7 @@ public:
       exit(1);
     }
 
-    std::string trajectory_action_name = arm_controller_+"/joint_trajectory_generator_unwrap";
+    std::string trajectory_action_name = arm_ +"_arm_controller/"+joint_action_;
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(trajectory_action_name, true);
 
     double counter = 0;
@@ -254,6 +255,7 @@ protected:
 
   ros::NodeHandle nh_;
   urdf::Model robot_model_;
+  std::string joint_action_;
   int dimension_, free_angle_;
   double search_discretization_, timeout_;
   std::string action_name_, arm_, arm_controller_, root_name_, tip_name_;
