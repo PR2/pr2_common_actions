@@ -353,4 +353,6 @@ if __name__ == '__main__':
     if quit_when_finished:
       exit()
     rospy.spin()
+  else:
+    rospy.spin()
 
