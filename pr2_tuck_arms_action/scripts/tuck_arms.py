@@ -96,9 +96,9 @@ class TuckArmsActionServer:
     self.success = True
 
     # Get controller name and start joint trajectory action clients
-    controller_name = rospy.get_param('~controller_name', 'arm_controller')
-    self.left_joint_client = client = actionlib.SimpleActionClient('l_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
-    self.right_joint_client = client = actionlib.SimpleActionClient('r_'+controller_name+'/joint_trajectory_action', JointTrajectoryAction)
+    action_name = rospy.get_param('~joint_trajectory_action', 'joint_trajectory_action')
+    self.left_joint_client = client = actionlib.SimpleActionClient('l_arm_controller/'+action_name, JointTrajectoryAction)
+    self.right_joint_client = client = actionlib.SimpleActionClient('r_arm_controller/'+action_name, JointTrajectoryAction)
 
     # Connect to controller state
     rospy.Subscriber('l_'+controller_name+'/state', JointTrajectoryControllerState ,self.stateCb)
