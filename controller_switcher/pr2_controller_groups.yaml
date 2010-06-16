@@ -1,0 +1,19 @@
+groups:
+  r_arm:
+    - r_arm_controller
+    - r_arm_cartesian_pose_controller
+    - r_arm_cartesian_twist_controller
+    - r_arm_cartesian_wrench_controller
+    - r_arm_trajectory_controller
+    - r_arm_joint_trajectory_controller
+  l_arm:
+    - l_arm_controller
+    - l_arm_cartesian_pose_controller
+    - l_arm_cartesian_twist_controller
+    - l_arm_cartesian_wrench_controller
+    - l_arm_trajectory_controller
+    - l_arm_joint_trajectory_controller
+  head:
+    - head_traj_controller
+    - head_controller
+    
