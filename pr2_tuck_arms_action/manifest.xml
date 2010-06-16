@@ -2,7 +2,7 @@
   <description brief="pr2_tuck_arms_action">
      pr2_tuck_arms_action
   </description>
-  <author>Jonathan Bohren</author>
+  <author>Wim Meeussen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_tuck_arms_action</url>
