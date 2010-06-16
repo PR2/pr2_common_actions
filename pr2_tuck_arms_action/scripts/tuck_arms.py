@@ -83,7 +83,6 @@ r_arm_untuck_traj = [r_arm_approach,
 l_arm_clear_traj = [l_arm_untucked]
 r_arm_clear_traj = [r_arm_untucked]
 
-move_duration = 2.5
 quit_when_finished = False
 
 class TuckArmsActionServer:
@@ -96,9 +95,11 @@ class TuckArmsActionServer:
     self.success = True
 
     # Get controller name and start joint trajectory action clients
+    self.move_duration = rospy.get_param('~move_duration', 2.5)
     action_name = rospy.get_param('~joint_trajectory_action', 'joint_trajectory_action')
     self.left_joint_client = client = actionlib.SimpleActionClient('l_arm_controller/'+action_name, JointTrajectoryAction)
     self.right_joint_client = client = actionlib.SimpleActionClient('r_arm_controller/'+action_name, JointTrajectoryAction)
+
 
     # Connect to controller state
     rospy.Subscriber('l_arm_controller/state', JointTrajectoryControllerState ,self.stateCb)
@@ -257,7 +258,7 @@ class TuckArmsActionServer:
       goal.trajectory.points.append(JointTrajectoryPoint( positions = p,
                                                           velocities = [],
                                                           accelerations = [],
-                                                          time_from_start = rospy.Duration((count+1) * move_duration)))
+                                                          time_from_start = rospy.Duration((count+1) * self.move_duration)))
     goal.trajectory.header.stamp = rospy.get_rostime() + rospy.Duration(0.01)
     if wait:
       if not {'l': self.left_joint_client, 'r': self.right_joint_client}[side].send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0)):
