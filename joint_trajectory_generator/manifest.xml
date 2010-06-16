@@ -4,7 +4,7 @@
      joint_trajectory_generator
 
   </description>
-  <author>Eitan Marder-Eppstein156</author>
+  <author>Eitan Marder-Eppstein, Wim Meeussen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/joint_trajectory_generator</url>
@@ -20,6 +20,9 @@
   </export>
 
 
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
 </package>
 
 

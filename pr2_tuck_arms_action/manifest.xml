@@ -2,7 +2,7 @@
   <description brief="pr2_tuck_arms_action">
      pr2_tuck_arms_action
   </description>
-  <author>Jonathan Bohren</author>
+  <author>Wim Meeussen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_tuck_arms_action</url>
@@ -13,6 +13,9 @@
   <depend package="pr2_common_action_msgs"/>
   <depend package="pr2_controllers_msgs"/>
 
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
 </package>
 
 
