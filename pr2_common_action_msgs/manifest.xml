@@ -4,7 +4,7 @@
      pr2_common_action_msgs
 
   </description>
-  <author></author>
+  <author>Wim Meeussen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_common_action_msgs</url>
