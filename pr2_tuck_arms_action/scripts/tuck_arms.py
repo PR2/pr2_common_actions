@@ -101,8 +101,8 @@ class TuckArmsActionServer:
     self.right_joint_client = client = actionlib.SimpleActionClient('r_arm_controller/'+action_name, JointTrajectoryAction)
 
     # Connect to controller state
-    rospy.Subscriber('l_'+controller_name+'/state', JointTrajectoryControllerState ,self.stateCb)
-    rospy.Subscriber('r_'+controller_name+'/state', JointTrajectoryControllerState ,self.stateCb)
+    rospy.Subscriber('l_arm_controller/state', JointTrajectoryControllerState ,self.stateCb)
+    rospy.Subscriber('r_arm_controller/state', JointTrajectoryControllerState ,self.stateCb)
 
     # Wait for joint clients to connect with timeout
     if not self.left_joint_client.wait_for_server(rospy.Duration(30)):
