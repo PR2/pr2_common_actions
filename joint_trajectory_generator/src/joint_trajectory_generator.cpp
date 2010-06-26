@@ -107,11 +107,11 @@ namespace joint_trajectory_generator {
 
         // Increase traj length to account for the initial pose
         ROS_INFO_STREAM("Initial trajectory has "<<n_traj_points<<" points.");
-        new_goal.trajectory.set_points_size(n_traj_points + 1);
+        new_goal.trajectory.points.resize(n_traj_points + 1);
   
         // Set joint names
         for(size_t i=0; i<n_traj_points+1; i++) {
-          new_goal.trajectory.points[i].set_positions_size(n_joint_names);
+          new_goal.trajectory.points[i].positions.resize(n_joint_names);
         }
 
         {
