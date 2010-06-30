@@ -34,6 +34,22 @@
 # Modified by Kevin Watts for two arm use
 # Modified by Jonathan Bohren to be an action and for untucking
 
+"""
+usage: tuck_arms.py [-q] [-l ACTION] [-r ACTION]
+
+Options:
+  -q or --quit   Quit when finished
+  -l or --left   Action for left arm
+  -r or --right  Action for right arm
+
+Actions:
+  t or tuck
+  u or untuck
+
+NB: If two arms are specified, actions must be the same for both arms.
+
+"""
+
 import roslib
 import signal
 roslib.load_manifest('pr2_tuck_arms_action')
@@ -51,6 +67,10 @@ from pr2_controllers_msgs.msg import *
 from pr2_common_action_msgs.msg import *
 import getopt
 import actionlib
+
+def usage():
+  print __doc__ % vars()
+  rospy.signal_shutdown("Help requested")
 
 # Joint names
 joint_names = ["shoulder_pan", 
@@ -300,15 +320,17 @@ class TuckArmsActionServer:
 if __name__ == '__main__':
   action_name = 'tuck_arms'
   rospy.init_node(action_name)
+  rospy.sleep(0.001)  # wait for time
   tuck_arms_action_server = TuckArmsActionServer(action_name)
 
   # check for command line arguments, and send goal to action server if required
+  
   myargs = rospy.myargv()[1:]
   if len(myargs):
     goal = TuckArmsGoal()
     goal.left = False
     goal.right = False
-    opts, args = getopt.getopt(myargs, 'ql:r:', ['quit','left','right'])
+    opts, args = getopt.getopt(myargs, 'hql:r:', ['quit','left','right'])
     for arm, action in opts:
       
       if arm in ('-l', '--left'):
@@ -316,34 +338,37 @@ if __name__ == '__main__':
         if action in ('tuck', 't'):
           if goal.right and goal.untuck:
             rospy.logerr('Cannot tuck left arm while untucking right arm')
-            exit()
+            rospy.signal_shutdown("ERROR")
           goal.untuck = False
         elif action in ('untuck', 'u'):
           if goal.right and not goal.untuck:
             rospy.logerr('Cannot untuck left arm while tucking right arm')
-            exit()
+            rospy.signal_shutdown("ERROR")
           goal.untuck = True
         else:
           rospy.logerr('Unknown option for left arm: %s. Use "tuck" or "untuck"'%action)
-          exit()
+          rospy.signal_shutdown("ERROR")
 
       if arm in ('-r', '--right'):
         goal.right = True
         if action in ('tuck', 't'):
           if goal.left and goal.untuck:
             rospy.logerr('Cannot tuck right arm while untucking left arm')
-            exit()
+            rospy.signal_shutdown("ERROR")
           goal.untuck = False
         elif action in ('untuck', 'u'):
           if goal.left and not goal.untuck:
             rospy.logerr('Cannot untuck right arm while tucking left arm')
-            exit()
+            rospy.signal_shutdown("ERROR")
           goal.untuck = True
         else:
           rospy.logerr('Unknown option for right arm: %s. Use "tuck" or "untuck"'%action)
-          exit()
+          rospy.signal_shutdown("ERROR")
       if arm in ('--quit', '-q'):
         quit_when_finished = True
+
+      if arm in ('--help', '-h'):
+        usage()
     
     tuck_arm_client = actionlib.SimpleActionClient(action_name, TuckArmsAction)
     rospy.logdebug('Waiting for action server to start')
@@ -352,8 +377,7 @@ if __name__ == '__main__':
     tuck_arm_client.send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0))
 
     if quit_when_finished:
-      exit()
-    rospy.spin()
-  else:
-    rospy.spin()
+      rospy.signal_shutdown("Quitting")
+
+  rospy.spin()
 
