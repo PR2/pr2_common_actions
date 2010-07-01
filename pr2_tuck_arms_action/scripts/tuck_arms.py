@@ -107,6 +107,9 @@ quit_when_finished = False
 
 class TuckArmsActionServer:
   def __init__(self, node_name):
+    self.r_received = False
+    self.l_received = False
+
     self.node_name = node_name
 
     # arm state: -1 unknown, 0 tucked, 1 untucked
