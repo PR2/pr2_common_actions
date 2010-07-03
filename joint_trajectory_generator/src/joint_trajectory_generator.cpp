@@ -69,7 +69,7 @@ namespace joint_trajectory_generator {
         pn.param("max_vel", max_vel_, 5.0);
 
         // Load Robot Model
-        ROS_INFO("Loading robot model");
+        ROS_DEBUG("Loading robot model");
         std::string xml_string;
         ros::NodeHandle nh_toplevel;
         if (!nh_toplevel.getParam(std::string("/robot_description"), xml_string))
@@ -106,12 +106,12 @@ namespace joint_trajectory_generator {
                n_joint_names = goal.trajectory.joint_names.size();
 
         // Increase traj length to account for the initial pose
-        ROS_INFO_STREAM("Initial trajectory has "<<n_traj_points<<" points.");
-        new_goal.trajectory.set_points_size(n_traj_points + 1);
+        ROS_DEBUG_STREAM("Initial trajectory has "<<n_traj_points<<" points.");
+        new_goal.trajectory.points.resize(n_traj_points + 1);
   
         // Set joint names
         for(size_t i=0; i<n_traj_points+1; i++) {
-          new_goal.trajectory.points[i].set_positions_size(n_joint_names);
+          new_goal.trajectory.points[i].positions.resize(n_joint_names);
         }
 
         {
@@ -159,7 +159,7 @@ namespace joint_trajectory_generator {
       }
 
       void executeCb(const pr2_controllers_msgs::JointTrajectoryGoalConstPtr& goal){
-        ROS_INFO("Got a goal");
+        ROS_DEBUG("Got a goal");
 
         pr2_controllers_msgs::JointTrajectoryGoal full_goal;
         try {
@@ -175,7 +175,7 @@ namespace joint_trajectory_generator {
         while(ros::ok() && !ac_.waitForResult(ros::Duration(0.05))){
           if(as_.isPreemptRequested()){
             if(as_.isNewGoalAvailable()){
-              ROS_INFO("Preempted by new goal");
+              ROS_DEBUG("Preempted by new goal");
               boost::shared_ptr<const pr2_controllers_msgs::JointTrajectoryGoal> new_goal = as_.acceptNewGoal();
               full_goal = createGoal(*new_goal);
               ac_.sendGoal(full_goal, JTAC::SimpleDoneCallback(),
@@ -183,7 +183,7 @@ namespace joint_trajectory_generator {
                   boost::bind(&JointTrajectoryGenerator::feedbackCb, this, _1));
             }
             else{
-              ROS_INFO("Preempted by cancel");
+              ROS_DEBUG("Preempted by cancel");
               ac_.cancelGoal();
             }
           }
@@ -198,15 +198,15 @@ namespace joint_trajectory_generator {
         pr2_controllers_msgs::JointTrajectoryResultConstPtr result = ac_.getResult();
 
         if(state == actionlib::SimpleClientGoalState::PREEMPTED){
-          ROS_INFO("Preempted");
+          ROS_DEBUG("Preempted");
           as_.setPreempted(*result);
         }
         else if(state == actionlib::SimpleClientGoalState::SUCCEEDED){
-          ROS_INFO("Succeeded ");
+          ROS_DEBUG("Succeeded ");
           as_.setSucceeded(*result);
         }
         else if(state == actionlib::SimpleClientGoalState::ABORTED){
-          ROS_INFO("Aborted ");
+          ROS_DEBUG("Aborted ");
           as_.setAborted(*result);
         }
         else
