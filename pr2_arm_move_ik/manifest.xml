@@ -6,8 +6,8 @@
   </description>
   <author>Melonee Wise, Wim Meeussen</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/pr2_arm_ik_action</url>
+  <review status="API cleared" notes=""/>
+  <url>http://ros.org/wiki/pr2_arm_move_ik</url>
   <depend package="actionlib"/>
   <depend package="roscpp"/>
   <depend package="actionlib_msgs"/>

@@ -6,7 +6,7 @@
   </description>
   <author>Wim Meeussen</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="API cleared" notes=""/>
   <url>http://ros.org/wiki/pr2_common_action_msgs</url>
   <depend package="actionlib_msgs"/>
   <depend package="geometry_msgs"/>

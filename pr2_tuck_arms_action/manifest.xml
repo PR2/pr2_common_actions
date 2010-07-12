@@ -4,7 +4,7 @@
   </description>
   <author>Wim Meeussen</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="API cleared" notes=""/>
   <url>http://ros.org/wiki/pr2_tuck_arms_action</url>
   <depend package="actionlib"/>
   <depend package="rospy"/>
