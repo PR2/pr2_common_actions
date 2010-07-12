@@ -33,7 +33,7 @@
 #
 # Author Melonee Wise
 
-import roslib; roslib.load_manifest('pr2_arm_ik_action')
+import roslib; roslib.load_manifest('pr2_arm_move_ik')
 import rospy
 
 from pr2_common_action_msgs.msg import *
