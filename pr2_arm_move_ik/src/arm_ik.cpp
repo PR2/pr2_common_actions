@@ -118,7 +118,7 @@ public:
       exit(1);
     }
 
-    std::string trajectory_action_name = arm_ +"_arm_controller/"+joint_action_;
+    std::string trajectory_action_name = joint_action_;
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(trajectory_action_name, true);
 
     double counter = 0;
