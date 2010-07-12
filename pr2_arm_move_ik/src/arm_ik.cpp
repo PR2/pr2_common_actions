@@ -155,7 +155,10 @@ public:
   {
     // accept the new goal
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
-   
+
+    if (goal->tool_frame.header.frame_id == "")
+      ROS_WARN("Specifying the tool frame is not yet supported. The tool frame currently defaults to x_wrist_roll_link.");
+
     //Try to transform the pose to the root link frame
     bool ret1 = false;
     tf::Stamped<tf::Pose> tf_pose_stamped;
