@@ -1,9 +1,0 @@
-<launch>
-
-  <rosparam command="load" file="$(find pr2_default_controllers)/pr2_arm_controllers.yaml" />
-  <rosparam command="load" file="$(find pr2_default_controllers)/arm_cartesian_controllers.yaml" />
-
-  <node pkg="pr2_controller_manager" type="spawner" name="some_controllers_spawner"
-        args="--stopped r_arm_controller l_arm_controller r_arm_cartesian_wrench_controller l_arm_cartesian_wrench_controller" />
-
-</launch>
