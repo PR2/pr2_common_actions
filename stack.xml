@@ -9,7 +9,6 @@
   <depend stack="geometry" /> <!-- kdl, tf, angles -->
   <depend stack="pr2_controllers" /> <!-- trajectory_msgs, joint_trajectory_action, pr2_controllers_msgs -->
   <depend stack="pr2_kinematics" /> <!-- pr2_arm_kinematics -->
-  <depend stack="pr2_mechanism" /> <!-- pr2_mechanism_msgs -->
   <depend stack="robot_model" /> <!-- urdf -->
   <depend stack="ros" /> <!-- roslib, rospy, roscpp -->
 
