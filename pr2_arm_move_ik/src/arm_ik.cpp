@@ -43,23 +43,23 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <pr2_arm_kinematics/pr2_arm_ik_solver.h>
-#include <pr2_common_action_msgs/PR2ArmIKAction.h>
+#include <pr2_common_action_msgs/ArmMoveIKAction.h>
 #include <kdl/frames_io.hpp>
 #include <urdf/model.h>
 
-class PR2ArmIKAction
+class ArmMoveIKAction
 {
 
 public:
 
-  PR2ArmIKAction(std::string name) :
+  ArmMoveIKAction(std::string name) :
     nh_("~"),
     dimension_(7),
     action_name_(name),
-    as_(name, boost::bind(&PR2ArmIKAction::executeCB, this, _1))
+    as_(name, boost::bind(&ArmMoveIKAction::executeCB, this, _1))
   {
     //register the goal and feeback callbacks
-    as_.registerPreemptCallback(boost::bind(&PR2ArmIKAction::preemptCB, this));
+    as_.registerPreemptCallback(boost::bind(&ArmMoveIKAction::preemptCB, this));
 
     ros::NodeHandle nh_toplevel;
 
@@ -118,7 +118,7 @@ public:
       exit(1);
     }
 
-    std::string trajectory_action_name = arm_ +"_arm_controller/"+joint_action_;
+    std::string trajectory_action_name = joint_action_;
     trajectory_action_ = new actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>(trajectory_action_name, true);
 
     double counter = 0;
@@ -138,7 +138,7 @@ public:
     ROS_INFO("%s: Initialized", action_name_.c_str());
   }
 
-  ~PR2ArmIKAction(void)
+  ~ArmMoveIKAction(void)
   {
     delete trajectory_action_;
   }
@@ -151,11 +151,14 @@ public:
     as_.setPreempted();
   }
 
-  void executeCB(const pr2_common_action_msgs::PR2ArmIKGoalConstPtr & goal)
+  void executeCB(const pr2_common_action_msgs::ArmMoveIKGoalConstPtr & goal)
   {
     // accept the new goal
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
-   
+
+    if (goal->tool_frame.header.frame_id == "")
+      ROS_WARN("Specifying the tool frame is not yet supported. The tool frame currently defaults to x_wrist_roll_link.");
+
     //Try to transform the pose to the root link frame
     bool ret1 = false;
     tf::Stamped<tf::Pose> tf_pose_stamped;
@@ -263,13 +266,13 @@ protected:
   KDL::Chain kdl_chain_;
   KDL::JntArray jnt_pos_suggestion_;
 
-  actionlib::SimpleActionServer<pr2_common_action_msgs::PR2ArmIKAction> as_;
+  actionlib::SimpleActionServer<pr2_common_action_msgs::ArmMoveIKAction> as_;
   actionlib::SimpleActionClient<pr2_controllers_msgs::JointTrajectoryAction>* trajectory_action_;
 
   boost::shared_ptr<pr2_arm_kinematics::PR2ArmIKSolver> pr2_arm_ik_solver_;
   tf::TransformListener tf_;
 
-  pr2_common_action_msgs::PR2ArmIKResult result_;
+  pr2_common_action_msgs::ArmMoveIKResult result_;
 
 };
 
@@ -277,7 +280,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "pr2_arm_ik");
 
-  PR2ArmIKAction pr2_arm_ik(ros::this_node::getName());
+  ArmMoveIKAction pr2_arm_ik(ros::this_node::getName());
   ros::spin();
 
   return 0;

@@ -1,10 +1,9 @@
 #goal definition
-bool untuck # Set true to untuck, false to tuck
-bool left
-bool right
+bool tuck_left
+bool tuck_right
 ---
 #result definition
-uint8 left
-uint8 right
+bool tuck_left
+bool tuck_right
 ---
 #feedback

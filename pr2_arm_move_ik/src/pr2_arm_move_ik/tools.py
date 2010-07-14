@@ -33,14 +33,14 @@
 #
 # Author Melonee Wise
 
-import roslib; roslib.load_manifest('pr2_arm_ik_action')
+import roslib; roslib.load_manifest('pr2_arm_move_ik')
 import rospy
 
 from pr2_common_action_msgs.msg import *
 
 
 def get_action_seed(ns):
-  cart_space_goal = PR2ArmIKGoal()
+  cart_space_goal = ArmMoveIKGoal()
   cart_space_goal.ik_seed.name = rospy.get_param(ns +"/joint_names")
   cart_space_goal.ik_seed.position = rospy.get_param(ns +"/seed_position")
   return cart_space_goal.ik_seed

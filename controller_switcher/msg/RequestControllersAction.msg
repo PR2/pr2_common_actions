@@ -1,4 +1,0 @@
-
-RequestControllersActionGoal action_goal
-RequestControllersActionResult action_result
-RequestControllersActionFeedback action_feedback

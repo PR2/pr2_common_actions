@@ -35,6 +35,7 @@
 # Modified by Kevin Watts for two arm use
 # Modified by Jonathan Bohren to be an action and for untucking
 
+
 """
 usage: tuck_arms.py [-q] [-l ACTION] [-r ACTION]
 
@@ -118,10 +119,10 @@ class TuckArmsActionServer:
 
     # Get controller name and start joint trajectory action clients
     self.move_duration = rospy.get_param('~move_duration', 2.5)
-    action_name = rospy.get_param('~joint_trajectory_action', 'joint_trajectory_action')
-    self.left_joint_client = client = actionlib.SimpleActionClient('l_arm_controller/'+action_name, JointTrajectoryAction)
-    self.right_joint_client = client = actionlib.SimpleActionClient('r_arm_controller/'+action_name, JointTrajectoryAction)
-
+    r_action_name = rospy.get_param('~r_joint_trajectory_action', 'r_arm_controller/joint_trajectory_action')
+    l_action_name = rospy.get_param('~l_joint_trajectory_action', 'l_arm_controller/joint_trajectory_action')
+    self.left_joint_client = client = actionlib.SimpleActionClient(l_action_name, JointTrajectoryAction)
+    self.right_joint_client = client = actionlib.SimpleActionClient(r_action_name, JointTrajectoryAction)
 
     # Connect to controller state
     rospy.Subscriber('l_arm_controller/state', JointTrajectoryControllerState ,self.stateCb)
@@ -146,105 +147,46 @@ class TuckArmsActionServer:
 
     # Create a new result
     result = TuckArmsResult()
-    result.left = True
-    result.right = True
+    result.tuck_left = True
+    result.tuck_right = True
 
-    # Tucking
-    if not goal.untuck:
-      # tuck both arms
-      if goal.right and goal.left:
-        rospy.loginfo('Tucking left arm and right arm...')
-        # left arm is tucked already
-        if self.l_arm_state == 0:
-          # right arm is tucked already
-          if self.r_arm_state == 0:
-            rospy.loginfo('  ...both arm are tucked already')
-          # right arm is not tucked yet
-          else:
-            rospy.loginfo('  ...tucking right arm')
-            self.untuckR()
-            self.tuckR()
-        # left arm is not tucked 
-        else:
-          rospy.loginfo('  ...untucking and tucking both arms')
-          self.untuckL()
-          self.tuckL()
-          self.tuckR()
+    # Tucking left and right arm
+    if goal.tuck_right and goal.tuck_left:
+      rospy.loginfo('Tucking both arms...')
+      self.tuckL()
+      self.tuckR()
 
+    # Tucking left arm, untucking right arm
+    elif goal.tuck_left and not goal.tuck_right:
+      rospy.loginfo('Tucking left arm and untucking right arm...')
+      self.untuckR()
+      self.tuckL()
 
-      # tuck left arm only
-      elif goal.left:
-        rospy.loginfo('Tucking left arm...')
-        # left arm is tucked already
-        if self.l_arm_state == 0:
-          rospy.loginfo('  ...left arm is already tucked')          
-        # right arm is tucked
-        elif self.r_arm_state == 0:
-          rospy.loginfo('  ...untucking right arm and tucking both arms')             
-          self.untuckR()
-          self.tuckL()
-          self.tuckR()
-        # right arm is not tucked
-        else:
-          rospy.loginfo('  ...untucking right arm and tucking left')          
-          self.untuckR()
-          self.tuckL()
+    # Tucking right arm, untucking left arm
+    if goal.tuck_right and not goal.tuck_left:
+      rospy.loginfo('Tucking right arm and untucking left arm...')        
+      self.untuckL()
+      self.tuckR()
 
-
-      # tuck right arm only
-      elif goal.right:
-        rospy.loginfo('Tucking right arm...')        
-        # right arm is tucked already
-        if self.r_arm_state == 0:
-          rospy.loginfo('  ...right arm is already tucked')
-        # left arm is tucked
-        elif self.l_arm_state == 0:
-          rospy.loginfo('  ...tucking right arm')          
-          self.tuckR()
-        # left arm is not tucked
-        else:
-          rospy.loginfo('  ...untucking left arm and tucking right arm')          
-          self.untuckL()
-          self.tuckR()
-
-    # UnTucking
-    else:
-      if goal.right and not goal.left:
-        rospy.loginfo("Untucking only right arm...")
-        rospy.loginfo("  ...untucking right arm")
-        self.untuckR()
-      elif goal.right and goal.left:
-        rospy.loginfo("Untucking right and left arms...")
-        rospy.loginfo("  ...untucking boht arms")
-        self.untuckR()
-        self.untuckL()
-        self.untuckR()
-      elif goal.left:
-        rospy.loginfo("Untucking left arm...")
-        if self.r_arm_state == 0:
-          rospy.loginfo("  ...untucking both arms, tucking right arm")          
-          self.untuckR()
-          self.untuckL()
-          self.tuckR()
-        else:
-          rospy.loginfo("  ...untucking both arms")                    
-          self.untuckR()
-          self.untuckL()
-          self.untuckR()
+    # UnTucking both arms
+    if not goal.tuck_right and not goal.tuck_left:
+      rospy.loginfo("Untucking both arms...")
+      self.untuckR()
+      self.untuckL()
 
     # Succeed or fail
     if self.success:
+      result.tuck_right = goal.tuck_right
+      result.tuck_left = goal.tuck_left
       self.action_server.set_succeeded(result)
-      if goal.untuck:
-        rospy.loginfo("Untuck arms SUCCEEDED")
-      else:
-        rospy.loginfo("Tuck arms SUCCEEDED")
     else:
       rospy.logerr("Tuck or untuck arms FAILED: %d %d"%(result.left, result.right))
+      result.tuck_right = (self.r_arm_state == 0)
+      result.tuck_left = (self.l_arm_state == 0)
       self.action_server.set_aborted(result)
 
 
-  # clears r arm
+  # clears r arm and l arm
   def tuckL(self):
     if self.l_arm_state != 0:
       self.go('r', r_arm_up_traj)
@@ -338,42 +280,29 @@ def main():
   myargs = rospy.myargv()[1:]
   if len(myargs):
     goal = TuckArmsGoal()
-    goal.left = False
-    goal.right = False
+    goal.tuck_left = True
+    goal.tuck_right = True
     opts, args = getopt.getopt(myargs, 'hql:r:', ['quit','left','right'])
     for arm, action in opts:
       
       if arm in ('-l', '--left'):
-        goal.left = True
         if action in ('tuck', 't'):
-          if goal.right and goal.untuck:
-            rospy.logerr('Cannot tuck left arm while untucking right arm')
-            rospy.signal_shutdown("ERROR")
-          goal.untuck = False
+          goal.tuck_left = True
         elif action in ('untuck', 'u'):
-          if goal.right and not goal.untuck:
-            rospy.logerr('Cannot untuck left arm while tucking right arm')
-            rospy.signal_shutdown("ERROR")
-          goal.untuck = True
+          goal.tuck_left = False
         else:
-          rospy.logerr('Unknown option for left arm: %s. Use "tuck" or "untuck"'%action)
-          rospy.signal_shutdown("ERROR")
+           rospy.logerr('Invalid action for right arm: %s'%action)
+           rospy.signal_shutdown("ERROR")
 
       if arm in ('-r', '--right'):
-        goal.right = True
         if action in ('tuck', 't'):
-          if goal.left and goal.untuck:
-            rospy.logerr('Cannot tuck right arm while untucking left arm')
-            rospy.signal_shutdown("ERROR")
-          goal.untuck = False
+          goal.tuck_right = True
         elif action in ('untuck', 'u'):
-          if goal.left and not goal.untuck:
-            rospy.logerr('Cannot untuck right arm while tucking left arm')
-            rospy.signal_shutdown("ERROR")
-          goal.untuck = True
+          goal.tuck_right = False
         else:
-          rospy.logerr('Unknown option for right arm: %s. Use "tuck" or "untuck"'%action)
-          rospy.signal_shutdown("ERROR")
+           rospy.logerr('Invalid action for left arm: %s'%action)
+           rospy.signal_shutdown("ERROR")
+
       if arm in ('--quit', '-q'):
         quit_when_finished = True
 
