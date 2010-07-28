@@ -44,7 +44,6 @@ def get_action_goal(ns):
   joint_names = rospy.get_param(ns +"/joint_names")
   joint_space_goal.trajectory.joint_names = joint_names
   waypoints = rospy.get_param(ns +"/waypoints")
-  joint_space_goal.trajectory.header.stamp = rospy.Time.now()+rospy.Duration(0.2)
   for waypoint in waypoints:
     joint_space_goal.trajectory.points.append(JointTrajectoryPoint(positions = waypoint[0], velocities = waypoint[1], accelerations = waypoint[2], time_from_start = rospy.Duration(waypoint[3])))
 
