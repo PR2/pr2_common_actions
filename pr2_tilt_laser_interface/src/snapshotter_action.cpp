@@ -64,6 +64,9 @@ private:
   ros::NodeHandle nh_;
   SnapshotActionServer as_;
 
+  ros::Subscriber sub_;
+  ros::ServiceClient laser_controller_sc_;
+
   boost::mutex state_mutex_;
   SnapshotState state_;
 
@@ -77,20 +80,39 @@ Snapshotter::Snapshotter() :
   as_.registerGoalCallback(    boost::bind(&Snapshotter::goalCallback,    this, _1) );
   as_.registerCancelCallback(  boost::bind(&Snapshotter::cancelCallback, this, _1) );
 
-  // Todo: Subscribe to Laser Scans
-  // Todo: Subscribe to Laser Signals
+  laser_controller_sc_ = nh_.serviceClient<pr2_msgs::SetLaserTrajCmd>("laser_tilt_controller/set_traj_cmd");
+
+  laser_sub_ = nh_.subscribe("tilt_scan", 10, &Snapshotter::scanCallback, this);
+}
+
+
+void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
+{
+  boost::mutex::scoped_lock lock(state_mutex_);
+
+  if (state_ == SnapshotStates::IDLE)
+    return;
+  else if (state == SnapshotStates::COLLECTING)
+  {
+    if (scan->header.stamp < interval_start_)
+    {
+      // Can't do anything since we haven't gotten to our interval yet
+      return;
+    }
+    else if (scan->header.stamp < interval_end_)
+    {
+      // Process Scans
+    }
+    else
+    {
+      // Bundle everything up and publish
+
+    }
+  }
 }
 
 void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
 {
-  // Check validity of the new goal
-  if (gh.getGoal()->command_laser)
-  {
-    ROS_DEBUG("Rejecting Goal.  We don't know how to command the laser yet");
-    gh.setRejected();
-    return;
-  }
-
   {
     boost::mutex::scoped_lock lock(state_mutex_);
 
@@ -101,10 +123,40 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
       state_ = SnapshotStates::IDLE;
     }
 
+    // Build the service request for the tilt laser controller
+    pr2_tilt_laser_interface::GetSnapshotGoalConstPtr goal = pr2_ gh.getGoal();
+
+    pr2_msgs::LaserTrajCmd cmd;
+
+    cmd.profile = "linear";
+    cmd.position.resize(3);
+    cmd.position[0] = goal->start_angle;
+    cmd.position[1] = goal->end_angle;
+    cmd.position[2] = goal->start_angle;
+
+    ros::Duration scan_duration = (goal->start_angle - goal->end_angle)/goal->speed;
+    if (scan_duration.toSec() < 0.0)
+      scan_duration = -scan_duration;
+
+    cmd.time_from_start.resize(3);
+    cmd.time_from_start[0] = ros::Duration(0.0);
+    cmd.time_from_start[1] = scan_duration;
+    cmd.time_from_start[2] = 2*scan_duration;
+    cmd.max_velocity = 0;
+    cmd.max_acceleration= 0;
+
+    pr2_msgs::SetLaserTrajCmd laser_srv_cmd;
+    laser_srv_cmd.request = cmd;
+
+    laser_controller_sc_.call(laser_srv_cmd);
+
+    interval_start_ = laser_srv_cmd.response.start_time;
+    interval_end_   = laser_srv_cmd.response.start_time + scan_duration;
+
     // Load the new goal
     assert(state_ == SnapshotStates::IDLE);
     current_gh_ = gh;
-    state_ = SnapshotStates::WAITING_FOR_START_SIGNAL;
+    state_ = SnapshotStates::COLLECTING;
   }
 }
 

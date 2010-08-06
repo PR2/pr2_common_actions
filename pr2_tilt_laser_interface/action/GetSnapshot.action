@@ -1,5 +1,6 @@
 # Goal
-bool command_laser   # True: Use the command below. False: Use existing profile
+# We always want to command. Don't need this bool
+# bool command_laser   # True: Use the command below. False: Use existing profile
 float32 start_angle
 float32 end_angle
 float32 speed
