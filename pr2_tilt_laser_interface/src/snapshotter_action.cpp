@@ -34,7 +34,9 @@
 #include <pr2_tilt_laser_interface/GetSnapshotAction.h>
 
 // Controller Interface
-#include <pr2_msgs/LaserScannerSignal.h>
+#include <pr2_msgs/SetLaserTrajCmd.h>
+
+#include <sensor_msgs/LaserScan.h>
 
 using namespace pr2_tilt_laser_interface;
 
@@ -42,8 +44,7 @@ namespace SnapshotStates
 {
   enum SnapshotState
   {
-    WAITING_FOR_START_SIGNAL = 0,
-    WAITING_FOR_END_SIGNAL = 1,
+    COLLECTING = 0,
     IDLE = 2
   };
 }
@@ -56,6 +57,8 @@ class Snapshotter
 public:
   Snapshotter();
 
+  void scanCallback(const sensor_msgs::LaserScanConstPtr& scan);
+
   // Action Interface
   void goalCallback(SnapshotActionServer::GoalHandle gh);
   void cancelCallback(SnapshotActionServer::GoalHandle gh);
@@ -64,11 +67,13 @@ private:
   ros::NodeHandle nh_;
   SnapshotActionServer as_;
 
-  ros::Subscriber sub_;
+  ros::Subscriber laser_sub_;
   ros::ServiceClient laser_controller_sc_;
 
   boost::mutex state_mutex_;
   SnapshotState state_;
+  ros::Time interval_start_;
+  ros::Time interval_end_;
 
   SnapshotActionServer::GoalHandle current_gh_;
 };
@@ -92,7 +97,7 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
 
   if (state_ == SnapshotStates::IDLE)
     return;
-  else if (state == SnapshotStates::COLLECTING)
+  else if (state_ == SnapshotStates::COLLECTING)
   {
     if (scan->header.stamp < interval_start_)
     {
@@ -124,7 +129,7 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
     }
 
     // Build the service request for the tilt laser controller
-    pr2_tilt_laser_interface::GetSnapshotGoalConstPtr goal = pr2_ gh.getGoal();
+    pr2_tilt_laser_interface::GetSnapshotGoalConstPtr goal = gh.getGoal();
 
     pr2_msgs::LaserTrajCmd cmd;
 
@@ -134,22 +139,23 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
     cmd.position[1] = goal->end_angle;
     cmd.position[2] = goal->start_angle;
 
-    ros::Duration scan_duration = (goal->start_angle - goal->end_angle)/goal->speed;
+    ros::Duration scan_duration( (goal->start_angle - goal->end_angle)/goal->speed );
     if (scan_duration.toSec() < 0.0)
       scan_duration = -scan_duration;
 
     cmd.time_from_start.resize(3);
     cmd.time_from_start[0] = ros::Duration(0.0);
     cmd.time_from_start[1] = scan_duration;
-    cmd.time_from_start[2] = 2*scan_duration;
+    cmd.time_from_start[2] = scan_duration + scan_duration;
     cmd.max_velocity = 0;
     cmd.max_acceleration= 0;
 
     pr2_msgs::SetLaserTrajCmd laser_srv_cmd;
-    laser_srv_cmd.request = cmd;
+    laser_srv_cmd.request.command = cmd;
 
     laser_controller_sc_.call(laser_srv_cmd);
 
+    // Determine the interval that we care about, based on the service response
     interval_start_ = laser_srv_cmd.response.start_time;
     interval_end_   = laser_srv_cmd.response.start_time + scan_duration;
 
