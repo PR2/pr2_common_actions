@@ -118,25 +118,31 @@ private:
 };
 
 Snapshotter::Snapshotter() :
-  as_(nh_, "get_laser_snapshot"),
+  as_(nh_, "get_laser_snapshot", false),
   state_(SnapshotStates::IDLE),
   tf_(nh_)
 {
   as_.registerGoalCallback(    boost::bind(&Snapshotter::goalCallback,    this, _1) );
   as_.registerCancelCallback(  boost::bind(&Snapshotter::cancelCallback, this, _1) );
 
+  // Initialize interface to the controller
+  // TODO: Make this into an action interface, once the controller supports it
   laser_controller_sc_ = nh_.serviceClient<pr2_msgs::SetLaserTrajCmd>("laser_tilt_controller/set_traj_cmd");
 
-  // ***** Set fixed_frame *****
+  // Grab the fixed frame off the parameter server
   ros::NodeHandle private_ns_("~");
   if (!private_ns_.getParam("fixed_frame", fixed_frame_))
-      ROS_ERROR("Need to set parameter fixed_frame");
+      ROS_FATAL("Need to set parameter ~fixed_frame");
+  ROS_DEBUG("Using fixed frame [%s]", fixed_frame_.c_str());
 
+  // Set up the tf filter
   scan_sub_.subscribe(nh_, "tilt_scan", 10);
   tf_filter_.reset( new tf::MessageFilter<sensor_msgs::LaserScan>(scan_sub_, tf_, fixed_frame_, 10) );
   tf_filter_->registerCallback( boost::bind(&Snapshotter::scanCallback, this, _1) );
-}
 
+  // Start the action server
+  as_.start();
+}
 
 void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
 {
@@ -168,6 +174,9 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       state_ = SnapshotStates::IDLE;
     }
   }
+  else
+    ROS_ERROR("In an unknown state.  This is a programming error");
+
 }
 
 void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
