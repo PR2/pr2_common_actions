@@ -36,7 +36,40 @@
 // Controller Interface
 #include <pr2_msgs/SetLaserTrajCmd.h>
 
+// Laser Processing
 #include <sensor_msgs/LaserScan.h>
+#include <laser_scan_geometry/laser_scan_geometry.h>
+
+#include <tf/transform_listener.h>
+#include "tf/message_filter.h"
+#include <message_filters/subscriber.h>
+
+void appendCloud(sensor_msgs::PointCloud2& dest, const sensor_msgs::PointCloud2& src)
+{
+  // TODO: Add error/consistency checking here
+  dest.height += 1;
+
+  size_t start = dest.data.size();
+
+  if (start == 0)
+  {
+    dest = src;
+    return;
+  }
+
+  dest.data.resize( start + src.data.size() );
+  memcpy(&dest.data[start], &src.data[0], src.data.size());
+
+  // TODO: Lookup timestamp index offset
+  int time_index = 20;
+  float time_offset = src.header.stamp.toSec() - dest.header.stamp.toSec();
+  float* time_ptr;
+  for (size_t i=0; i < src.width * src.height; ++i)
+  {
+    time_ptr = (float*) &dest.data[start + i*src.point_step + time_index];
+    *time_ptr += time_offset;
+  }
+}
 
 using namespace pr2_tilt_laser_interface;
 
@@ -44,7 +77,7 @@ namespace SnapshotStates
 {
   enum SnapshotState
   {
-    COLLECTING = 0,
+    COLLECTING = 1,
     IDLE = 2
   };
 }
@@ -67,27 +100,41 @@ private:
   ros::NodeHandle nh_;
   SnapshotActionServer as_;
 
-  ros::Subscriber laser_sub_;
+  message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub_;
   ros::ServiceClient laser_controller_sc_;
 
   boost::mutex state_mutex_;
   SnapshotState state_;
   ros::Time interval_start_;
   ros::Time interval_end_;
+  Eigen::MatrixXd co_sine_map_;
+  GetSnapshotResult snapshot_result_;
 
   SnapshotActionServer::GoalHandle current_gh_;
+
+  tf::TransformListener tf_;
+  std::string fixed_frame_;
+  boost::scoped_ptr<tf::MessageFilter<sensor_msgs::LaserScan> > tf_filter_;
 };
 
 Snapshotter::Snapshotter() :
   as_(nh_, "get_laser_snapshot"),
-  state_(SnapshotStates::IDLE)
+  state_(SnapshotStates::IDLE),
+  tf_(nh_)
 {
   as_.registerGoalCallback(    boost::bind(&Snapshotter::goalCallback,    this, _1) );
   as_.registerCancelCallback(  boost::bind(&Snapshotter::cancelCallback, this, _1) );
 
   laser_controller_sc_ = nh_.serviceClient<pr2_msgs::SetLaserTrajCmd>("laser_tilt_controller/set_traj_cmd");
 
-  laser_sub_ = nh_.subscribe("tilt_scan", 10, &Snapshotter::scanCallback, this);
+  // ***** Set fixed_frame *****
+  ros::NodeHandle private_ns_("~");
+  if (!private_ns_.getParam("fixed_frame", fixed_frame_))
+      ROS_ERROR("Need to set parameter fixed_frame");
+
+  scan_sub_.subscribe(nh_, "tilt_scan", 10);
+  tf_filter_.reset( new tf::MessageFilter<sensor_msgs::LaserScan>(scan_sub_, tf_, fixed_frame_, 10) );
+  tf_filter_->registerCallback( boost::bind(&Snapshotter::scanCallback, this, _1) );
 }
 
 
@@ -101,17 +148,24 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
   {
     if (scan->header.stamp < interval_start_)
     {
+      ROS_DEBUG("Waiting to get to the start of the interval");
       // Can't do anything since we haven't gotten to our interval yet
       return;
     }
     else if (scan->header.stamp < interval_end_)
     {
       // Process Scans
+      ROS_DEBUG("In the actual interval");
+      sensor_msgs::PointCloud2 cur_cloud;
+      laser_scan_geometry::projectLaser(*scan, cur_cloud, co_sine_map_);
+      appendCloud(snapshot_result_.cloud, cur_cloud);
     }
     else
     {
-      // Bundle everything up and publish
-
+      ROS_DEBUG("Bundling everything up and publishing");
+      current_gh_.setSucceeded(snapshot_result_);
+      snapshot_result_.cloud.data.clear();
+      state_ = SnapshotStates::IDLE;
     }
   }
 }
