@@ -44,13 +44,14 @@
 #include <tf/transform_listener.h>
 #include "tf/message_filter.h"
 #include <message_filters/subscriber.h>
+#include <pcl/io/io.h>
 
 void appendCloud(sensor_msgs::PointCloud2& dest, const sensor_msgs::PointCloud2& src)
 {
   // TODO: Add error/consistency checking here
   dest.height += 1;
 
-  size_t start = dest.data.size();
+  size_t start = dest.data.size ();
 
   if (start == 0)
   {
@@ -58,16 +59,16 @@ void appendCloud(sensor_msgs::PointCloud2& dest, const sensor_msgs::PointCloud2&
     return;
   }
 
-  dest.data.resize( start + src.data.size() );
-  memcpy(&dest.data[start], &src.data[0], src.data.size());
+  dest.data.resize (start + src.data.size ());
+  memcpy (&dest.data[start], &src.data[0], src.data.size ());
 
-  // TODO: Lookup timestamp index offset
-  int time_index = 20;
-  float time_offset = src.header.stamp.toSec() - dest.header.stamp.toSec();
+  // Get the time index field offset
+  int time_index = src.fields[pcl::getFieldIndex (dest, "timestamp")].offset;
+  float time_offset = src.header.stamp.toSec () - dest.header.stamp.toSec ();
   float* time_ptr;
-  for (size_t i=0; i < src.width * src.height; ++i)
+  for (size_t i = 0; i < src.width * src.height; ++i)
   {
-    time_ptr = (float*) &dest.data[start + i*src.point_step + time_index];
+    time_ptr = (float*) &dest.data[start + i * src.point_step + time_index];
     *time_ptr += time_offset;
   }
 }
@@ -176,16 +177,15 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       }
       else
       {
-        laser_scan_geometry::transformLaserScanToPointCloud(fixed_frame_, *scan, tf_, cur_cloud_tf, co_sine_map_);
+        laser_scan_geometry::transformLaserScanToPointCloud (fixed_frame_, *scan, tf_, cur_cloud_tf, co_sine_map_);
       }
-      appendCloud(snapshot_result_.cloud, cur_cloud_tf);
-
+      appendCloud (snapshot_result_.cloud, cur_cloud_tf);
     }
     else
     {
-      ROS_DEBUG("Bundling everything up and publishing cloud with %u points", snapshot_result_.cloud.width * snapshot_result_.cloud.width);
-      current_gh_.setSucceeded(snapshot_result_);
-      snapshot_result_.cloud.data.clear();
+      ROS_DEBUG ("Bundling everything up and publishing cloud with %u points", snapshot_result_.cloud.width * snapshot_result_.cloud.width);
+      current_gh_.setSucceeded (snapshot_result_);
+      snapshot_result_.cloud.data.clear ();
       state_ = SnapshotStates::IDLE;
     }
   }
