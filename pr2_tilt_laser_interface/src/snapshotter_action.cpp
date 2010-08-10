@@ -39,6 +39,7 @@
 // Laser Processing
 #include <sensor_msgs/LaserScan.h>
 #include <laser_scan_geometry/laser_scan_geometry.h>
+#include <pcl_tf/transforms.h>
 
 #include <tf/transform_listener.h>
 #include "tf/message_filter.h"
@@ -163,8 +164,13 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       // Process Scans
       ROS_DEBUG("In the actual interval");
       sensor_msgs::PointCloud2 cur_cloud;
+      sensor_msgs::PointCloud2 cur_cloud_tf;
+
       laser_scan_geometry::projectLaser(*scan, cur_cloud, co_sine_map_);
-      appendCloud(snapshot_result_.cloud, cur_cloud);
+      tf::StampedTransform net_transform;
+      tf_.lookupTransform(fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
+      pcl::transformPointCloud(fixed_frame_, net_transform.inverse(), cur_cloud, cur_cloud_tf);
+      appendCloud(snapshot_result_.cloud, cur_cloud_tf);
     }
     else
     {
@@ -190,6 +196,9 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
       current_gh_.setCanceled();
       state_ = SnapshotStates::IDLE;
     }
+
+    current_gh_ = gh;
+    current_gh_.setAccepted();
 
     // Build the service request for the tilt laser controller
     pr2_tilt_laser_interface::GetSnapshotGoalConstPtr goal = gh.getGoal();
@@ -224,7 +233,6 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
 
     // Load the new goal
     assert(state_ == SnapshotStates::IDLE);
-    current_gh_ = gh;
     state_ = SnapshotStates::COLLECTING;
   }
 }

@@ -25,6 +25,8 @@ rosbuild_genmsg()
 #rosbuild_gensrv()
 
 rosbuild_add_executable(snapshotter src/snapshotter_action.cpp)
+rosbuild_add_executable(grab_result src/grab_result.cpp)
+
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
