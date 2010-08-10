@@ -169,10 +169,10 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       if (!hi_fidelity_)
       {
         sensor_msgs::PointCloud2 cur_cloud;
-        laser_scan_geometry::projectLaser(*scan, cur_cloud, co_sine_map_);
+        laser_scan_geometry::projectLaser (*scan, cur_cloud, co_sine_map_);
         tf::StampedTransform net_transform;
-        tf_.lookupTransform(fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
-        pcl::transformPointCloud(fixed_frame_, net_transform.inverse(), cur_cloud, cur_cloud_tf);
+        tf_.lookupTransform (fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
+        pcl::transformPointCloud (fixed_frame_, net_transform, cur_cloud, cur_cloud_tf);
       }
       else
       {
