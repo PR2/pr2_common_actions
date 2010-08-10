@@ -15,6 +15,8 @@ int main(int argc, char** argv)
 
   pub.publish(cloud);
 
+  printf("Published the point cloud!\n");
+
   ros::spin();
 
   return 0;

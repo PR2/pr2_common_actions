@@ -108,6 +108,7 @@ private:
   SnapshotState state_;
   ros::Time interval_start_;
   ros::Time interval_end_;
+  bool hi_fidelity_;
   Eigen::MatrixXd co_sine_map_;
   GetSnapshotResult snapshot_result_;
 
@@ -163,18 +164,26 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
     {
       // Process Scans
       ROS_DEBUG("In the actual interval");
-      sensor_msgs::PointCloud2 cur_cloud;
       sensor_msgs::PointCloud2 cur_cloud_tf;
 
-      laser_scan_geometry::projectLaser(*scan, cur_cloud, co_sine_map_);
-      tf::StampedTransform net_transform;
-      tf_.lookupTransform(fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
-      pcl::transformPointCloud(fixed_frame_, net_transform.inverse(), cur_cloud, cur_cloud_tf);
+      if (!hi_fidelity_)
+      {
+        sensor_msgs::PointCloud2 cur_cloud;
+        laser_scan_geometry::projectLaser(*scan, cur_cloud, co_sine_map_);
+        tf::StampedTransform net_transform;
+        tf_.lookupTransform(fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
+        pcl::transformPointCloud(fixed_frame_, net_transform.inverse(), cur_cloud, cur_cloud_tf);
+      }
+      else
+      {
+        laser_scan_geometry::transformLaserScanToPointCloud(fixed_frame_, *scan, tf_, cur_cloud_tf, co_sine_map_);
+      }
       appendCloud(snapshot_result_.cloud, cur_cloud_tf);
+
     }
     else
     {
-      ROS_DEBUG("Bundling everything up and publishing");
+      ROS_DEBUG("Bundling everything up and publishing cloud with %u points", snapshot_result_.cloud.width * snapshot_result_.cloud.width);
       current_gh_.setSucceeded(snapshot_result_);
       snapshot_result_.cloud.data.clear();
       state_ = SnapshotStates::IDLE;
@@ -206,19 +215,22 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
     pr2_msgs::LaserTrajCmd cmd;
 
     cmd.profile = "linear";
-    cmd.position.resize(3);
+    cmd.position.resize(4);
     cmd.position[0] = goal->start_angle;
-    cmd.position[1] = goal->end_angle;
-    cmd.position[2] = goal->start_angle;
+    cmd.position[1] = goal->start_angle;
+    cmd.position[2] = goal->end_angle;
+    cmd.position[3] = goal->start_angle;
 
     ros::Duration scan_duration( (goal->start_angle - goal->end_angle)/goal->speed );
     if (scan_duration.toSec() < 0.0)
       scan_duration = -scan_duration;
 
-    cmd.time_from_start.resize(3);
+    ros::Duration wait_time(1.0);
+    cmd.time_from_start.resize(4);
     cmd.time_from_start[0] = ros::Duration(0.0);
-    cmd.time_from_start[1] = scan_duration;
-    cmd.time_from_start[2] = scan_duration + scan_duration;
+    cmd.time_from_start[1] = wait_time;
+    cmd.time_from_start[2] = wait_time + scan_duration;
+    cmd.time_from_start[3] = wait_time + scan_duration + scan_duration;
     cmd.max_velocity = 0;
     cmd.max_acceleration= 0;
 
@@ -228,8 +240,9 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
     laser_controller_sc_.call(laser_srv_cmd);
 
     // Determine the interval that we care about, based on the service response
-    interval_start_ = laser_srv_cmd.response.start_time;
-    interval_end_   = laser_srv_cmd.response.start_time + scan_duration;
+    interval_start_ = laser_srv_cmd.response.start_time + cmd.time_from_start[1];
+    interval_end_   = laser_srv_cmd.response.start_time + cmd.time_from_start[2];
+    hi_fidelity_ = goal->hi_fidelity;
 
     // Load the new goal
     assert(state_ == SnapshotStates::IDLE);
