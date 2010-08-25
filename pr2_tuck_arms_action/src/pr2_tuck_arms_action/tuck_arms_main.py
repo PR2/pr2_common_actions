@@ -84,11 +84,11 @@ joint_names = ["shoulder_pan",
                "wrist_roll" ]
 
 
-l_arm_tucked = [0.023, 1.290, 1.891, -1.686, -1.351, -0.184, 0.307]
-r_arm_tucked = [0.039, 1.262, -1.366, -2.067, -1.231, -1.998, 0.369]
+l_arm_tucked = [0.06024, 1.248526, 1.789070, -1.683386, -1.7343417, -0.0962141, -0.0864407]
+r_arm_tucked = [-0.023593, 1.1072800, -1.5566882, -2.124408, -1.4175, -1.8417, 0.21436]
 l_arm_untucked = [ 0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]
 r_arm_untucked = [-0.4,  1.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]
-r_arm_approach = [0.039, 1.262, 0.0, -2.067, -1.231, -1.998, 0.369]
+r_arm_approach = [0.039, 1.1072, 0.0, -2.067, -1.231, -1.998, 0.369]
 r_arm_up_traj = [[-0.4,  0.0,   0.0,  -2.05,  0.0,  -0.1,  0.0]]
 
 # Tuck trajectory
@@ -171,8 +171,8 @@ class TuckArmsActionServer:
     # UnTucking both arms
     if not goal.tuck_right and not goal.tuck_left:
       rospy.loginfo("Untucking both arms...")
-      self.untuckR()
       self.untuckL()
+      self.untuckR()
 
     # Succeed or fail
     if self.success:
@@ -233,12 +233,23 @@ class TuckArmsActionServer:
       {'l': self.left_joint_client, 'r': self.right_joint_client}[side].send_goal(goal)
 
 
+  # Returns angle between -pi and + pi
+  def angleWrap(self, angle):
+    while angle > math.pi:
+      angle -= math.pi*2.0
+    while angle < -math.pi:
+      angle += math.pi*2.0
+    return angle
+
+
   def stateCb(self, msg):
     l_sum_tucked = 0
     l_sum_untucked = 0
     r_sum_tucked = 0
     r_sum_untucked = 0
     for name_state, name_desi, value_state, value_l_tucked, value_l_untucked, value_r_tucked, value_r_untucked in zip(msg.joint_names, joint_names, msg.actual.positions , l_arm_tucked, l_arm_untucked, r_arm_tucked, r_arm_untucked):
+      value_state = self.angleWrap(value_state)
+
       if 'l_'+name_desi+'_joint' == name_state:
         self.l_received = True
         l_sum_tucked = l_sum_tucked + math.fabs(value_state - value_l_tucked)
@@ -261,8 +272,6 @@ class TuckArmsActionServer:
       self.r_arm_state = 1
     elif r_sum_tucked >= 0.1 and r_sum_untucked >= 0.3:
       self.r_arm_state = -1    
-
-
 
 if __name__ == '__main__':
   main()
