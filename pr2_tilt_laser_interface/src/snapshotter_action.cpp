@@ -221,6 +221,11 @@ void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
     cmd.position[2] = goal->end_angle;
     cmd.position[3] = goal->start_angle;
 
+    if (goal->speed==0.0)
+    {
+      ROS_ERROR("Scan speed is set to zero -> aborting!\n");
+      return;
+    }
     ros::Duration scan_duration( (goal->start_angle - goal->end_angle)/goal->speed );
     if (scan_duration.toSec() < 0.0)
       scan_duration = -scan_duration;
