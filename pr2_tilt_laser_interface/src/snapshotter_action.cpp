@@ -166,7 +166,6 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       // Process Scans
       ROS_DEBUG("In the actual interval");
       sensor_msgs::PointCloud2 cur_cloud_tf;
-
       if (!hi_fidelity_)
       {
         sensor_msgs::PointCloud2 cur_cloud;
