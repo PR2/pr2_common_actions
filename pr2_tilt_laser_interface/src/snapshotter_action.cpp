@@ -141,6 +141,7 @@ Snapshotter::Snapshotter() :
   // Set up the tf filter
   scan_sub_.subscribe(nh_, "tilt_scan", 10);
   tf_filter_.reset( new tf::MessageFilter<sensor_msgs::LaserScan>(scan_sub_, tf_, fixed_frame_, 10) );
+  tf_filter_->setTolerance(ros::Duration(0.025));
   tf_filter_->registerCallback( boost::bind(&Snapshotter::scanCallback, this, _1) );
 
   // Start the action server
