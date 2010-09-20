@@ -110,7 +110,7 @@ private:
   ros::Time interval_start_;
   ros::Time interval_end_;
   bool hi_fidelity_;
-  Eigen::ArrayXXd co_sine_map_;
+  Eigen3::ArrayXXd co_sine_map_;
   GetSnapshotResult snapshot_result_;
 
   SnapshotActionServer::GoalHandle current_gh_;
