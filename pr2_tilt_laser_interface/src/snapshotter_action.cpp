@@ -85,18 +85,19 @@ namespace SnapshotStates
 }
 typedef SnapshotStates::SnapshotState SnapshotState;
 
-typedef actionlib::ActionServer<pr2_tilt_laser_interface::GetSnapshotAction> SnapshotActionServer;
+typedef actionlib::ActionServer<GetSnapshotAction> SnapshotActionServer;
 
 class Snapshotter
 {
 public:
-  Snapshotter(bool continuous=false);
+  Snapshotter();
 
+  void startScan(double move_to_start_wait_time=1.0);
+  
   void scanCallback(const sensor_msgs::LaserScanConstPtr& scan);
 
   // Action Interface
   void goalCallback(SnapshotActionServer::GoalHandle gh);
-  void startScan(SnapshotActionServer::GoalHandle gh);
   void cancelCallback(SnapshotActionServer::GoalHandle gh);
 
 private:
@@ -110,24 +111,23 @@ private:
   SnapshotState state_;
   ros::Time interval_start_;
   ros::Time interval_end_;
-  bool hi_fidelity_;
   Eigen3::ArrayXXd co_sine_map_;
   GetSnapshotResult snapshot_result_;
+  GetSnapshotFeedback snapshot_feedback_;
 
   SnapshotActionServer::GoalHandle current_gh_;
+  GetSnapshotGoal goal_;
 
   tf::TransformListener tf_;
   std::string fixed_frame_;
   boost::scoped_ptr<tf::MessageFilter<sensor_msgs::LaserScan> > tf_filter_;
   
-  bool continuous_;
 };
 
-Snapshotter::Snapshotter(bool continuous) :
+Snapshotter::Snapshotter() :
   as_(nh_, "get_laser_snapshot", false),
   state_(SnapshotStates::IDLE),
-  tf_(nh_),
-  continuous_(continuous)
+  tf_(nh_)
 {
   as_.registerGoalCallback(    boost::bind(&Snapshotter::goalCallback,    this, _1) );
   as_.registerCancelCallback(  boost::bind(&Snapshotter::cancelCallback, this, _1) );
@@ -158,7 +158,10 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
 
   if (state_ == SnapshotStates::IDLE)
     return;
-  else if (state_ == SnapshotStates::COLLECTING)
+
+  sensor_msgs::PointCloud2& cloud = (goal_.continuous ? snapshot_feedback_.cloud : snapshot_result_.cloud);
+  
+  if (state_ == SnapshotStates::COLLECTING)
   {
     if (scan->header.stamp < interval_start_)
     {
@@ -172,7 +175,7 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       ROS_DEBUG("In the actual interval");
       sensor_msgs::PointCloud2 cur_cloud_tf;
 
-      if (!hi_fidelity_)
+      if (!goal_.hi_fidelity)
       {
         sensor_msgs::PointCloud2 cur_cloud;
         laser_scan_geometry::projectLaser (*scan, cur_cloud, co_sine_map_);
@@ -184,24 +187,26 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       {
         laser_scan_geometry::transformLaserScanToPointCloud (fixed_frame_, *scan, tf_, cur_cloud_tf, co_sine_map_);
       }
-      appendCloud (snapshot_result_.cloud, cur_cloud_tf);
+      appendCloud (cloud, cur_cloud_tf);
     }
     else
     {
-      ROS_DEBUG ("Bundling everything up and publishing cloud with %u points", snapshot_result_.cloud.width * snapshot_result_.cloud.width);
+      ROS_DEBUG ("Bundling everything up and publishing cloud with %u points", cloud.width * cloud.width);
 
-      if (continuous_)
+      state_ = SnapshotStates::IDLE;
+      
+      if (goal_.continuous)
       {
         // TODO: Send out msg and start next scan
-        current_gh_.setSucceeded (snapshot_result_);
-        //startScan(current_gh_);
+        current_gh_.publishFeedback (snapshot_feedback_);
+        std::swap(goal_.start_angle, goal_.end_angle);
+        startScan(0.1);
       }
       else
       {
         current_gh_.setSucceeded (snapshot_result_);
       }
-      snapshot_result_.cloud.data.clear ();
-      state_ = SnapshotStates::IDLE;
+      cloud.data.clear ();
     }
   }
   else
@@ -211,13 +216,8 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
 
 void Snapshotter::goalCallback(SnapshotActionServer::GoalHandle gh)
 {
-  startScan(gh);
-}
-
-void Snapshotter::startScan(SnapshotActionServer::GoalHandle gh)
-{
   boost::mutex::scoped_lock lock(state_mutex_);
-
+  
   // Preemption Logic
   if (state_ != SnapshotStates::IDLE)
   {
@@ -227,30 +227,38 @@ void Snapshotter::startScan(SnapshotActionServer::GoalHandle gh)
 
   current_gh_ = gh;
   current_gh_.setAccepted();
+  
+  goal_ = *current_gh_.getGoal();
+
+  startScan();
+}
+
+void Snapshotter::startScan(double move_to_start_wait_time)
+{
+  //boost::mutex::scoped_lock lock(state_mutex_);
 
   // Build the service request for the tilt laser controller
-  pr2_tilt_laser_interface::GetSnapshotGoalConstPtr goal = gh.getGoal();
 
   pr2_msgs::LaserTrajCmd cmd;
 
   cmd.profile = "linear";
   cmd.position.resize(4);
-  cmd.position[0] = goal->start_angle;
-  cmd.position[1] = goal->start_angle;
-  cmd.position[2] = goal->end_angle;
-  cmd.position[3] = goal->start_angle;
+  cmd.position[0] = goal_.start_angle;
+  cmd.position[1] = goal_.start_angle;
+  cmd.position[2] = goal_.end_angle;
+  cmd.position[3] = (goal_.continuous ? goal_.end_angle : goal_.start_angle);
 
-  if (goal->speed==0.0)
+  if (goal_.speed==0.0)
   {
     ROS_ERROR("Scan speed is set to zero -> aborting!\n");
     return;
   }
   
-  ros::Duration scan_duration( (goal->start_angle - goal->end_angle)/goal->speed );
+  ros::Duration scan_duration( (goal_.start_angle - goal_.end_angle)/goal_.speed );
   if (scan_duration.toSec() < 0.0)
     scan_duration = -scan_duration;
 
-  ros::Duration wait_time(1.0);
+  ros::Duration wait_time(move_to_start_wait_time);
   cmd.time_from_start.resize(4);
   cmd.time_from_start[0] = ros::Duration(0.0);
   cmd.time_from_start[1] = wait_time;
@@ -267,11 +275,13 @@ void Snapshotter::startScan(SnapshotActionServer::GoalHandle gh)
   // Determine the interval that we care about, based on the service response
   interval_start_ = laser_srv_cmd.response.start_time + cmd.time_from_start[1];
   interval_end_   = laser_srv_cmd.response.start_time + cmd.time_from_start[2];
-  hi_fidelity_ = goal->hi_fidelity;
 
   // Load the new goal
   assert(state_ == SnapshotStates::IDLE);
   state_ = SnapshotStates::COLLECTING;
+  
+  snapshot_feedback_.cloud.data.clear();
+  snapshot_result_.cloud.data.clear();
 }
 
 void Snapshotter::cancelCallback(SnapshotActionServer::GoalHandle gh)
@@ -279,42 +289,42 @@ void Snapshotter::cancelCallback(SnapshotActionServer::GoalHandle gh)
   boost::mutex::scoped_lock lock(state_mutex_);
 
   // See if our current goal is the one that needs to be cancelled
-  if (current_gh_ == gh)
+  if (current_gh_ != gh)
   {
-    current_gh_.setCanceled();
-    state_ = SnapshotStates::IDLE;
-  }
-  else
     ROS_DEBUG("Got a cancel request for some other goal. Ignoring it");
+    return;
+  }
+  current_gh_.setCanceled();
+  state_ = SnapshotStates::IDLE;
 }
 
-void printUsage(const char* progName)
-{
-  std::cout << "\n\nUsage: "<<progName<<" [options]\n\n"
-            << "Options:\n"
-            << "-------------------------------------------\n"
-            << "-c           Continuous - after receiving one action request, continue doing 3D scans all the time.\n"
-            << "-h           this help\n"
-            << "\n\n";
-}
+//void printUsage(const char* progName)
+//{
+  //std::cout << "\n\nUsage: "<<progName<<" [options]\n\n"
+            //<< "Options:\n"
+            //<< "-------------------------------------------\n"
+            //<< "-c           Continuous - after receiving one action request, continue doing 3D scans all the time.\n"
+            //<< "-h           this help\n"
+            //<< "\n\n";
+//}
 
 int main(int argc, char** argv)
 {
-  // Read command line arguments.
-  bool continuous_mode = false;
-  for (char c; (c = getopt(argc, argv, "ch")) != -1; ) {
-    switch (c) {
-      case 'c':
-        continuous_mode = true;
-        std::cout << "Using continuous mode.\n";
-        break;
-      case 'h':
-        printUsage(argv[0]);
-        exit(0);
-    }
-  }
+  //// Read command line arguments.
+  //bool continuous_mode = false;
+  //for (char c; (c = getopt(argc, argv, "ch")) != -1; ) {
+    //switch (c) {
+      //case 'c':
+        //continuous_mode = true;
+        //std::cout << "Using continuous mode.\n";
+        //break;
+      //case 'h':
+        //printUsage(argv[0]);
+        //exit(0);
+    //}
+  //}
   
   ros::init(argc, argv, "laser_snapshotter");
-  Snapshotter snapshotter(continuous_mode);
+  Snapshotter snapshotter;
   ros::spin();
 }
