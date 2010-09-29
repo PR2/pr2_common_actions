@@ -16,6 +16,11 @@
   <depend package="eigen3" />
   <depend package="laser_scan_geometry" />
   <depend package="pcl_tf" />
+
+ <export>
+   <cpp cflags="-I${prefix}/msg_gen/cpp/include" />
+ </export>
+
 </package>
 
 
