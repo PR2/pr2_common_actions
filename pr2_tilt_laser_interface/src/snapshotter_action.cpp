@@ -38,8 +38,8 @@
 
 // Laser Processing
 #include <sensor_msgs/LaserScan.h>
-#include <laser_scan_geometry/laser_scan_geometry.h>
-#include <pcl_tf/transforms.h>
+#include <laser_geometry/laser_geometry.h>
+#include <pcl_ros/transforms.h>
 
 #include <tf/transform_listener.h>
 #include "tf/message_filter.h"
@@ -111,7 +111,7 @@ private:
   SnapshotState state_;
   ros::Time interval_start_;
   ros::Time interval_end_;
-  Eigen3::ArrayXXd co_sine_map_;
+  laser_geometry::LaserProjection lg_;
   GetSnapshotResult snapshot_result_;
   GetSnapshotFeedback snapshot_feedback_;
 
@@ -178,14 +178,14 @@ void Snapshotter::scanCallback(const sensor_msgs::LaserScanConstPtr& scan)
       if (!goal_.hi_fidelity)
       {
         sensor_msgs::PointCloud2 cur_cloud;
-        laser_scan_geometry::projectLaser (*scan, cur_cloud, co_sine_map_);
+        lg_.projectLaser (*scan, cur_cloud);
         tf::StampedTransform net_transform;
         tf_.lookupTransform (fixed_frame_, cur_cloud.header.frame_id, cur_cloud.header.stamp, net_transform);
-        pcl::transformPointCloud (fixed_frame_, net_transform, cur_cloud, cur_cloud_tf);
+        pcl_ros::transformPointCloud (fixed_frame_, net_transform, cur_cloud, cur_cloud_tf);
       }
       else
       {
-        laser_scan_geometry::transformLaserScanToPointCloud (fixed_frame_, *scan, tf_, cur_cloud_tf, co_sine_map_);
+        lg_.transformLaserScanToPointCloud (fixed_frame_, *scan, cur_cloud_tf, tf_);
       }
       appendCloud (cloud, cur_cloud_tf);
     }

@@ -14,8 +14,8 @@
   <depend package="sensor_msgs"/>
   <depend package="pr2_msgs"/>
   <depend package="eigen3" />
-  <depend package="laser_scan_geometry" />
-  <depend package="pcl_tf" />
+  <depend package="laser_geometry" />
+  <depend package="pcl_ros" />
 
  <export>
    <cpp cflags="-I${prefix}/msg_gen/cpp/include" />
