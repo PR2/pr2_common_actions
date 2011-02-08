@@ -203,6 +203,12 @@ public:
     KDL::Frame desired_pose;
     tf::PoseTFToKDL(root_to_tip_goal, desired_pose);
 
+    if(goal->ik_seed.name.size() < dimension_ )
+    {
+      ROS_ERROR("The goal ik_seed must be size %d but is size %lu",dimension_, goal->ik_seed.name.size());
+      as_.setAborted();
+      return;
+    }
     // Get the IK seed from the goal
     for(int i=0; i < dimension_; i++)
     {
@@ -224,6 +230,7 @@ public:
 
     std::vector<double> traj_desired(dimension_);
     std::vector<std::string> traj_names(dimension_);
+
     for(int i=0; i < dimension_; i++)
     {
       traj_names[i] = goal->ik_seed.name[i];
