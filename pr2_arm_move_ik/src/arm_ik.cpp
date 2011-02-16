@@ -79,7 +79,7 @@ public:
       exit(1);
     }
 
-    // Get Parameters 
+    // Get Parameters
     nh_.param<std::string>("arm", arm_, "r");
     nh_.param("joint_trajectory_action", joint_action_, std::string("joint_trajectory_action"));
     nh_.param("free_angle", free_angle_, 2);
@@ -87,7 +87,7 @@ public:
     nh_.param("ik_timeout", timeout_, 5.0);
     root_name_ = "torso_lift_link";
     tip_name_ = arm_ + "_wrist_roll_link";
-    
+
 
     // Init pose suggestion
     jnt_pos_suggestion_.resize(dimension_);
@@ -156,31 +156,60 @@ public:
     // accept the new goal
     ROS_INFO("%s: Accepted Goal", action_name_.c_str() );
 
-    if (goal->tool_frame.header.frame_id == "")
-      ROS_WARN("Specifying the tool frame is not yet supported. The tool frame currently defaults to x_wrist_roll_link.");
 
-    //Try to transform the pose to the root link frame
-    bool ret1 = false;
-    tf::Stamped<tf::Pose> tf_pose_stamped;
-    KDL::Frame desired_pose;
+    // Determines the tool frame pose
+    tf::Pose tip_to_tool;
+    if (goal->tool_frame.header.frame_id == "")
+    {
+      tip_to_tool.setIdentity();
+    }
+    else
+    {
+      try {
+        geometry_msgs::PoseStamped tip_to_tool_msg;
+        tf_.waitForTransform(tip_name_, goal->tool_frame.header.frame_id, goal->tool_frame.header.stamp,
+                             ros::Duration(5.0));
+        tf_.transformPose(tip_name_, goal->tool_frame, tip_to_tool_msg);
+        tf::poseMsgToTF(tip_to_tool_msg.pose, tip_to_tool);
+      }
+      catch (const tf::TransformException &ex) {
+        ROS_ERROR("Failed to transform tool_frame into \"%s\": %s", tip_name_.c_str(), ex.what());
+        as_.setAborted();
+        return;
+      }
+    }
+
+    // Transforms the (tool) goal into the root frame
+    tf::Pose root_to_tool_goal;
     try
     {
-      std::string error_msg;
-      ret1 = tf_.waitForTransform(root_name_, goal->pose.header.frame_id, goal->pose.header.stamp,
-				  ros::Duration(5.0), ros::Duration(0.01), &error_msg);
-      // Transforms the pose into the root link frame
-      tf::poseStampedMsgToTF(goal->pose, tf_pose_stamped);
-      tf_.transformPose(root_name_, tf_pose_stamped, tf_pose_stamped);
-      tf::PoseTFToKDL(tf_pose_stamped, desired_pose);
+      geometry_msgs::PoseStamped root_to_tool_goal_msg;
+      tf_.waitForTransform(root_name_, goal->pose.header.frame_id, goal->pose.header.stamp,
+                           ros::Duration(5.0));
+      tf_.transformPose(root_name_, goal->pose, root_to_tool_goal_msg);
+      tf::poseMsgToTF(root_to_tool_goal_msg.pose, root_to_tool_goal);
     }
-    catch(const tf::TransformException &ex)
+    catch (const tf::TransformException &ex)
     {
-      ROS_ERROR("Transform failure (%d): %s", ret1, ex.what());
+      ROS_ERROR("Failed to transform goal into \"%s\": %s", root_name_.c_str(), ex.what());
       as_.setAborted();
       return;
     }
 
-    // Get the IK seed from the goal 
+    // Determines the goal of the tip from the goal of the tool
+    tf::Pose root_to_tip_goal = root_to_tool_goal * tip_to_tool.inverse();
+
+    // Converts into KDL
+    KDL::Frame desired_pose;
+    tf::PoseTFToKDL(root_to_tip_goal, desired_pose);
+
+    if(goal->ik_seed.name.size() < dimension_ )
+    {
+      ROS_ERROR("The goal ik_seed must be size %d but is size %lu",dimension_, goal->ik_seed.name.size());
+      as_.setAborted();
+      return;
+    }
+    // Get the IK seed from the goal
     for(int i=0; i < dimension_; i++)
     {
       jnt_pos_suggestion_(getJointIndex(goal->ik_seed.name[i])) = goal->ik_seed.position[i];
@@ -191,7 +220,9 @@ public:
     bool is_valid = (pr2_arm_ik_solver_->CartToJntSearch(jnt_pos_suggestion_, desired_pose, jnt_pos_out, timeout_)>=0);
     if(!is_valid)
     {
-      ROS_ERROR("%s: Aborted: IK invalid", action_name_.c_str());
+      ROS_ERROR("%s: Aborted: IK invalid.  Cannot get to (%.3f,%.3f,%.3f)(%.2f,%.2f,%.2f,%.2f)", action_name_.c_str(),
+                root_to_tip_goal.getOrigin()[0], root_to_tip_goal.getOrigin()[1], root_to_tip_goal.getOrigin()[2],
+                root_to_tip_goal.getRotation().x(),root_to_tip_goal.getRotation().y(),root_to_tip_goal.getRotation().z(),root_to_tip_goal.getRotation().w());
       //set the action state to aborted
       as_.setAborted();
       return;
@@ -199,6 +230,7 @@ public:
 
     std::vector<double> traj_desired(dimension_);
     std::vector<std::string> traj_names(dimension_);
+
     for(int i=0; i < dimension_; i++)
     {
       traj_names[i] = goal->ik_seed.name[i];

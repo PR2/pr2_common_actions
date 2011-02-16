@@ -171,8 +171,8 @@ class TuckArmsActionServer:
     # UnTucking both arms
     if not goal.tuck_right and not goal.tuck_left:
       rospy.loginfo("Untucking both arms...")
-      self.untuckR()
       self.untuckL()
+      self.untuckR()
 
     # Succeed or fail
     if self.success:
