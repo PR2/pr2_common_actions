@@ -9,6 +9,8 @@
   <depend stack="geometry" /> <!-- kdl, tf, eigen, angles -->
   <depend stack="laser_pipeline" /> <!-- laser_geometry -->
   <depend stack="perception_pcl" /> <!-- pcl_ros -->
+  <depend stack="laser_pipeline" /> <!-- laser_geometry -->
+  <depend stack="perception_pcl" /> <!-- pcl_ros -->
   <depend stack="pr2_common" /> <!-- pr2_msgs -->
   <depend stack="pr2_controllers" /> <!-- joint_trajectory_action, pr2_controllers_msgs -->
   <depend stack="pr2_kinematics" /> <!-- pr2_arm_kinematics -->
