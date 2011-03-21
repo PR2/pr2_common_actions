@@ -14,6 +14,6 @@
   <depend stack="pr2_kinematics" /> <!-- pr2_arm_kinematics -->
   <depend stack="robot_model" /> <!-- urdf -->
   <depend stack="ros" /> <!-- roslib -->
-  <depend stack="ros_comm" /> <!-- roscpp, actionlib, trajectory_msgs, sensor_msgs, pr2_arm_kinematics, rospy, pr2_msgs, tf, geometry_msgs, actionlib_msgs, pr2_controllers_msgs -->
+  <depend stack="ros_comm" /> <!-- rospy, roscpp -->
 
 </stack>

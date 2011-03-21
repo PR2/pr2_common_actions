@@ -32,7 +32,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Wim Meeussen
-# Modified by Kevin Watts for two arm use
 # Modified by Jonathan Bohren to be an action and for untucking
 
 
@@ -180,7 +179,7 @@ class TuckArmsActionServer:
       result.tuck_left = goal.tuck_left
       self.action_server.set_succeeded(result)
     else:
-      rospy.logerr("Tuck or untuck arms FAILED: %d %d"%(result.left, result.right))
+      rospy.logerr("Tuck or untuck arms FAILED: Right value: %d. Left value: %d" % (result.tuck_left, result.tuck_right))
       result.tuck_right = (self.r_arm_state == 0)
       result.tuck_left = (self.l_arm_state == 0)
       self.action_server.set_aborted(result)
