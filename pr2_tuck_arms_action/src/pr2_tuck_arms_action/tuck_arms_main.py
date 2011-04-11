@@ -135,7 +135,11 @@ class TuckArmsActionServer:
 
     # Construct action server
     self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction, self.executeCB)
+    self.action_server.register_preempt_callback(self._preempt_cb)
 
+  def _preempt_cb(self):
+    self.left_joint_client.cancel_goal()
+    self.right_joint_client.cancel_goal()
 
   def executeCB(self, goal):
     # Make sure we received arm state
