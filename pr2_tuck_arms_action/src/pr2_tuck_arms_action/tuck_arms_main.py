@@ -135,12 +135,7 @@ class TuckArmsActionServer:
 
     # Construct action server
     self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction, self.executeCB)
-    self.action_server.register_preempt_callback(self._preempt_cb)
 
-  def _preempt_cb(self):
-    # Cancel existing goals for arms
-    self.left_joint_client.cancel_all_goals()
-    self.right_joint_client.cancel_all_goals()
 
   def executeCB(self, goal):
     # Make sure we received arm state
@@ -148,10 +143,6 @@ class TuckArmsActionServer:
       rospy.sleep(0.1)
       if rospy.is_shutdown():
         return
-
-    # Cancel existing goals for arms
-    self.left_joint_client.cancel_all_goals()
-    self.right_joint_client.cancel_all_goals()
 
     # Create a new result
     result = TuckArmsResult()
