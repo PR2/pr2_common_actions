@@ -16,5 +16,5 @@
   <depend stack="robot_model" /> <!-- urdf -->
   <depend stack="ros" /> <!-- roslib -->
   <depend stack="ros_comm" /> <!-- rospy, roscpp -->
-
+  <depend stack="common_rosdeps" />
 </stack>
