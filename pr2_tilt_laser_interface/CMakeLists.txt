@@ -6,6 +6,10 @@ rosbuild_find_ros_package(actionlib_msgs)
 include(${actionlib_msgs_PACKAGE_PATH}/cmake/actionbuild.cmake)
 genaction()
 
+
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
 #  Debug          : w/ debug symbols, w/o optimization
