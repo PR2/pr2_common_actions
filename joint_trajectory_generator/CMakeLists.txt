@@ -24,10 +24,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
 
 rosbuild_add_library(joint_trajectory_generation src/trajectory_generation.cpp)
 
+rosbuild_add_boost_directories()
 rosbuild_add_executable(joint_trajectory_generator src/joint_trajectory_generator.cpp)
 target_link_libraries(joint_trajectory_generator joint_trajectory_generation)
+rosbuild_link_boost(joint_trajectory_generator thread)
