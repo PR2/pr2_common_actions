@@ -272,9 +272,6 @@ class TuckArmsActionServer:
     elif r_sum_tucked >= 0.1 and r_sum_untucked >= 0.3:
       self.r_arm_state = -1    
 
-if __name__ == '__main__':
-  main()
-
 
 def main():
   action_name = 'tuck_arms'
@@ -328,3 +325,6 @@ def main():
 
   rospy.spin()
 
+
+if __name__ == '__main__':
+  main()
