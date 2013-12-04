@@ -31,45 +31,69 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import roslib
-import signal
-roslib.load_manifest('pr2_tuck_arms_action')
+
+"""
+usage: tuck_arms.py [-l ACTION] [-r ACTION]
+
+Options:
+  -l or --left   Action for left arm
+  -r or --right  Action for right arm
+
+Actions:
+  t or tuck
+  u or untuck
+
+NB: If action unspecified for an arm, defaults to tuck
+
+"""
+
+
+import getopt
 
 import rospy
 
-import os
-import sys
-import time
-
-from actionlib_msgs.msg import *
-from pr2_common_action_msgs.msg import *
-
 import actionlib
 
+from pr2_common_action_msgs.msg import TuckArmsAction, TuckArmsGoal
+
 def main():
-	rospy.init_node("tuck_arms_action_test")
+    action_name = 'tuck_arms'
 
-	goal = TuckArmsGoal()
-	goal.untuck=False
-	goal.left=False
-	goal.right=False
+    # check for command line arguments, and send goal to action server if required
+    myargs = rospy.myargv()[1:]
+    if len(myargs):
+        goal = TuckArmsGoal()
+        goal.tuck_left = True
+        goal.tuck_right = True
+        opts, args = getopt.getopt(myargs, 'hql:r:', ['quit','left','right'])
+        for arm, action in opts:
+            if arm in ('-l', '--left'):
+                if action in ('tuck', 't'):
+                    goal.tuck_left = True
+                elif action in ('untuck', 'u'):
+                    goal.tuck_left = False
+                else:
+                    rospy.logerr('Invalid action for right arm: %s'%action)
+                    rospy.signal_shutdown("ERROR")
 
-	for arg in sys.argv:
-		if arg == 'l' or arg == 'left':
-			goal.left=True
-		elif arg == 'r' or arg == 'right':
-			goal.right=True
-		elif arg == 'u' or arg == 'untuck':
-			goal.untuck=True
+            if arm in ('-r', '--right'):
+                if action in ('tuck', 't'):
+                    goal.tuck_right = True
+                elif action in ('untuck', 'u'):
+                    goal.tuck_right = False
+                else:
+                    rospy.logerr('Invalid action for left arm: %s'%action)
+                    rospy.signal_shutdown("ERROR")
 
-	tuck_arms_client = actionlib.SimpleActionClient('tuck_arms', TuckArmsAction)
-	tuck_arms_client.wait_for_server()
-
-	rospy.loginfo("Sending tuck/untuck goal...")
-	tuck_arms_client.send_goal(goal)
-
-	tuck_arms_client.wait_for_result()
-
+            if arm in ('--help', '-h'):
+                print __doc__ % vars()
+    
+    tuck_arm_client = actionlib.SimpleActionClient(action_name, TuckArmsAction)
+    rospy.logdebug('Waiting for action server to start')
+    tuck_arm_client.wait_for_server(rospy.Duration(10.0))
+    rospy.logdebug('Sending goal to action server')
+    tuck_arm_client.send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0))
 
 if __name__ == "__main__":
-	main()
+    rospy.init_node('tuck_amrs_test')
+    main()
