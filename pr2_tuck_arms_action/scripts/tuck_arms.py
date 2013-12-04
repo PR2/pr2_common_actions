@@ -33,7 +33,5 @@
 #
 # Author: Wim Meeussen
 
-import roslib
-roslib.load_manifest('pr2_tuckarm')
 from pr2_tuck_arms_action import tuck_arms_main
 tuck_arms_main.main()
