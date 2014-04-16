@@ -1,8 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(pr2_arm_move_ik)
 
-find_package(catkin REQUIRED)
-catkin_package()
+find_package(catkin REQUIRED 
+  roscpp 
+  actionlib 
+  urdf 
+  pr2_common_action_msgs
+  geometry_msgs
+  tf
+  actionlib_msgs
+  pr2_controllers_msgs)
+
+catkin_package(
+  CATKIN_DEPENDS pr2_common_action_msgs geometry_msgs actionlib_msgs pr2_controllers_msgs)
 
 #
 # ESSENTIALS FROM OLD ROSBUILD CMAKELISTS:

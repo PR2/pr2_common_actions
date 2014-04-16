@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(pr2_tilt_laser_interface)
 
-find_package(catkin REQUIRED 
+find_package(catkin REQUIRED COMPONENTS
   roscpp 
   actionlib 
   actionlib_msgs
@@ -21,7 +21,6 @@ catkin_package(
   CATKIN_DEPENDS actionlib_msgs pr2_msgs sensor_msgs message_runtime)
 
 include_directories(
-  include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )

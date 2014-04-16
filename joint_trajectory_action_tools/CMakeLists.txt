@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   pr2_controllers_msgs)
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS trajectory_msgs pr2_controllers_msgs)
 
 catkin_python_setup()
