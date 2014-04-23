@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(pr2_arm_move_ik)
 
-find_package(catkin REQUIRED 
+find_package(catkin REQUIRED COMPONENTS
   roscpp 
   actionlib 
   urdf 
