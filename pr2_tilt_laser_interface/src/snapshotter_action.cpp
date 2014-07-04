@@ -40,6 +40,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <laser_geometry/laser_geometry.h>
 #include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <tf/transform_listener.h>
 #include "tf/message_filter.h"

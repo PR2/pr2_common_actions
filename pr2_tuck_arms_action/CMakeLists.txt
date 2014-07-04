@@ -85,7 +85,7 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pr2_tuck_arms_action
-#  CATKIN_DEPENDS actionlib actionlib_msgs pr2_common_action_msgs pr2_controllers_msgs rospy trajectory_msgs
+  CATKIN_DEPENDS actionlib_msgs pr2_common_action_msgs pr2_controllers_msgs trajectory_msgs
 #  DEPENDS system_lib
 )
 
