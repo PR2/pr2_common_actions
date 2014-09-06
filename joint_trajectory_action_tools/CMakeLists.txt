@@ -6,9 +6,14 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   joint_trajectory_action
   trajectory_msgs
-  pr2_controllers_msgs)
+  pr2_controllers_msgs
+)
+
+catkin_python_setup()
 
 catkin_package(
   CATKIN_DEPENDS trajectory_msgs pr2_controllers_msgs)
 
-catkin_python_setup()
+install(DIRECTORY config/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY test/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
