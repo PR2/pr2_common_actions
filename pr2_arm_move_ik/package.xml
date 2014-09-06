@@ -1,6 +1,6 @@
 <package>
   <name>pr2_arm_move_ik</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>
     Move the pr2 arm using inverse kinematics
   </description>
