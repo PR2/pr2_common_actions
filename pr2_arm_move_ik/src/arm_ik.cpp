@@ -216,7 +216,7 @@ public:
     }
 
     ROS_DEBUG("calling IK solver");
-    KDL::JntArray jnt_pos_out;
+    std::vector<KDL::JntArray> jnt_pos_out;
     bool is_valid = (pr2_arm_ik_solver_->CartToJntSearch(jnt_pos_suggestion_, desired_pose, jnt_pos_out, timeout_)>=0);
     if(!is_valid)
     {
@@ -234,7 +234,7 @@ public:
     for(int i=0; i < dimension_; i++)
     {
       traj_names[i] = goal->ik_seed.name[i];
-      traj_desired[i] = jnt_pos_out(getJointIndex(goal->ik_seed.name[i]));
+      traj_desired[i] = jnt_pos_out[0](getJointIndex(goal->ik_seed.name[i]));
     }
 
     pr2_controllers_msgs::JointTrajectoryGoal traj_goal ;
