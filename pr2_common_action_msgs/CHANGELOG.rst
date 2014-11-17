@@ -2,8 +2,8 @@
 Changelog for package pr2_common_action_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2014-11-17)
+------------------
 * Updated maintainership
 * Contributors: TheDash
 

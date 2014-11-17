@@ -1,6 +1,6 @@
 <package>
   <name>pr2_common_actions</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>
     Various actions which help in moving the arms of the PR2
     or getting data from its tilting laser.
