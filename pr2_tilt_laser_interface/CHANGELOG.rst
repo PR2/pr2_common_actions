@@ -2,6 +2,9 @@
 Changelog for package pr2_tilt_laser_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.4 (2014-11-17)
 ------------------
 
