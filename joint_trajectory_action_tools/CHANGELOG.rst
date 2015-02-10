@@ -2,6 +2,9 @@
 Changelog for package joint_trajectory_action_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.5 (2015-02-06)
+------------------
+
 0.0.4 (2014-11-17)
 ------------------
 * Updated maintainership
