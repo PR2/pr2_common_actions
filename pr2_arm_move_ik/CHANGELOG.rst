@@ -2,6 +2,9 @@
 Changelog for package pr2_arm_move_ik
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.5 (2015-02-06)
 ------------------
 * fix: use undefined function

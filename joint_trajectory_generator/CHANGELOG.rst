@@ -2,6 +2,9 @@
 Changelog for package joint_trajectory_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.5 (2015-02-06)
 ------------------
 

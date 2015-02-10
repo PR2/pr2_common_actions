@@ -2,6 +2,9 @@
 Changelog for package pr2_common_action_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.5 (2015-02-06)
 ------------------
 
