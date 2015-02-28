@@ -35,6 +35,19 @@
 # Modified by Jonathan Bohren to be an action and for untucking
 
 
+"""
+usage: tuck_arms.py [-l ACTION] [-r ACTION]
+Options:
+  -l or --left   Action for left arm
+  -r or --right  Action for right arm
+Actions:
+  t or tuck
+  u or untuck
+
+NB: If two arms are specified, actions must be the same for both arms.
+
+"""
+
 import signal
 
 import rospy
@@ -51,6 +64,9 @@ from pr2_common_action_msgs.msg import *
 import getopt
 import actionlib
 
+def usage():           
+  print __doc__ % vars()               
+  rospy.signal_shutdown("Help requested")
 
 # Joint names
 joint_names = ["shoulder_pan", 
@@ -257,6 +273,49 @@ def main():
   rospy.init_node(action_name)
   rospy.sleep(0.001)  # wait for time
   tuck_arms_action_server = TuckArmsActionServer(action_name)
+
+  quit_when_finished = False
+
+  # check for command line arguments, and send goal to action server if required
+  myargs = rospy.myargv()[1:]
+  if len(myargs):
+    goal = TuckArmsGoal()
+    goal.tuck_left = True
+    goal.tuck_right = True
+    opts, args = getopt.getopt(myargs, 'hql:r:', ['quit','left','right'])
+    for arm, action in opts:
+      if arm in ('-l', '--left'):
+        if action in ('tuck', 't'):
+          goal.tuck_left = True
+        elif action in ('untuck', 'u'):
+          goal.tuck_left = False
+        else:
+           rospy.logerr('Invalid action for right arm: %s'%action)
+           rospy.signal_shutdown("ERROR")
+
+      if arm in ('-r', '--right'):
+        if action in ('tuck', 't'):
+          goal.tuck_right = True
+        elif action in ('untuck', 'u'):
+          goal.tuck_right = False
+        else:
+           rospy.logerr('Invalid action for left arm: %s'%action)
+           rospy.signal_shutdown("ERROR")
+
+      if arm in ('--quit', '-q'):
+        quit_when_finished = True
+
+      if arm in ('--help', '-h'):
+        usage()
+    
+    tuck_arm_client = actionlib.SimpleActionClient(action_name, TuckArmsAction)
+    rospy.logdebug('Waiting for action server to start')
+    tuck_arm_client.wait_for_server(rospy.Duration(10.0))
+    rospy.logdebug('Sending goal to action server')
+    tuck_arm_client.send_goal_and_wait(goal, rospy.Duration(30.0), rospy.Duration(5.0))
+
+    if quit_when_finished:
+      rospy.signal_shutdown("Quitting")
 
   rospy.spin()
 
