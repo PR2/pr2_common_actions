@@ -34,7 +34,6 @@
 # Author: Wim Meeussen
 # Modified by Jonathan Bohren to be an action and for untucking
 
-
 import signal
 
 import rospy
@@ -50,7 +49,6 @@ from pr2_controllers_msgs.msg import *
 from pr2_common_action_msgs.msg import *
 import getopt
 import actionlib
-
 
 # Joint names
 joint_names = ["shoulder_pan", 
@@ -113,6 +111,7 @@ class TuckArmsActionServer:
 	    rospy.logerr("pr2_tuck_arms: right_joint_client action server did not come up within timelimit")
 
     # Construct action server
+    rospy.loginfo("Constructing action server")
     self.action_server = actionlib.simple_action_server.SimpleActionServer(node_name,TuckArmsAction, self.executeCB)
 
 
