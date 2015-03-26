@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 
-
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pr2_tuck_arms_action
@@ -25,6 +24,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-install(PROGRAMS scripts/tuck_arms.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(PROGRAMS scripts/tuck_arms.py src/pr2_tuck_arms_action/tuck_arms_main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(DIRECTORY test/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
