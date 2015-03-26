@@ -1,6 +1,6 @@
 <package>
   <name>joint_trajectory_generator</name>
-  <version>0.0.6</version>
+  <version>0.0.7</version>
   <description>
     joint_trajectory_generator action takes in a trajectory specified
     by a number of joint positions, and it generates a new smooth trajectory
