@@ -2,6 +2,11 @@
 Changelog for package pr2_tuck_arms_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated install location of tuck_arms_main.py
+* Contributors: TheDash
+
 0.0.6 (2015-02-10)
 ------------------
 

@@ -2,6 +2,9 @@
 Changelog for package pr2_tilt_laser_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.6 (2015-02-10)
 ------------------
 * Merge branch 'hydro-devel-unstable' of https://github.com/PR2/pr2_common_actions into hydro-devel-unstable
