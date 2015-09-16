@@ -5,7 +5,7 @@
     Move the pr2 arm using inverse kinematics
   </description>
 
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <author>Wim Meeusen</author>
   <author>Melonee Wise</author>
