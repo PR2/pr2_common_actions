@@ -5,7 +5,7 @@
     Move the pr2 arm using inverse kinematics
   </description>
 
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <author>Wim Meeusen</author>
   <author>Melonee Wise</author>

@@ -5,7 +5,7 @@
     joint_trajectory_action_tools
   </description>
 
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <author>Melonee Wise</author>
  
