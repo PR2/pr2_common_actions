@@ -2,6 +2,13 @@
 Changelog for package joint_trajectory_action_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#36 <https://github.com/pr2/pr2_common_actions/issues/36>`_ from k-okada/kinetic-devel
+  change maintainer to ROS orphaned package maintainer
+* change maintainer to ROS orphaned package maintainer
+* Contributors: Kei Okada
+
 0.0.7 (2015-03-26)
 ------------------
 
