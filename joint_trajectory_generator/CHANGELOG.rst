@@ -2,8 +2,8 @@
 Changelog for package joint_trajectory_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.10 (2018-02-14)
+-------------------
 * Merge pull request `#37 <https://github.com/pr2/pr2_common_actions/issues/37>`_ from k-okada/add_pr2_msgs
   add depend to pr2_controller_msgs
 * Merge pull request `#36 <https://github.com/pr2/pr2_common_actions/issues/36>`_ from k-okada/kinetic-devel
