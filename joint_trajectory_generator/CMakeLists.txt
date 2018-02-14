@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   urdf 
   angles
   actionlib
+  pr2_controllers_msgs
   joint_trajectory_action)
 
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -14,7 +15,7 @@ find_package(orocos_kdl REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES joint_trajectory_generation
-  CATKIN_DEPENDS roscpp urdf angles actionlib joint_trajectory_action
+  CATKIN_DEPENDS roscpp urdf angles actionlib joint_trajectory_action pr2_controllers_msgs
   DEPENDS Boost orocos_kdl)
 
 include_directories(
