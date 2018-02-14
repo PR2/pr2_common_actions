@@ -6,8 +6,7 @@
     or getting data from its tilting laser.
   </description>
 
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <author>Eitan Marder-Eppstein</author>
   <author>Wim Meeusen</author>
