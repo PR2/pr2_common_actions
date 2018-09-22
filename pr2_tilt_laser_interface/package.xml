@@ -1,6 +1,6 @@
 <package>
   <name>pr2_tilt_laser_interface</name>
-  <version>0.0.10</version>
+  <version>0.0.11</version>
   <description>
     Provides a set of tools/actions for manipulating the pr2's tilting
     laser. Simplifies previously complex tasks, such as fetching

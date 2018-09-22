@@ -2,8 +2,8 @@
 Changelog for package joint_trajectory_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.11 (2018-09-22)
+-------------------
 * Merge pull request `#38 <https://github.com/pr2/pr2_common_actions/issues/38>`_ from k-okada/add_travis
   update travis.yml
 * fix for urdfdom versoin > 1.0.0 (melodic)
