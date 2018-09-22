@@ -2,6 +2,9 @@
 Changelog for package joint_trajectory_action_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.10 (2018-02-14)
 -------------------
 * Merge pull request `#36 <https://github.com/pr2/pr2_common_actions/issues/36>`_ from k-okada/kinetic-devel

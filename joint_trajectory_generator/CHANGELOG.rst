@@ -2,6 +2,13 @@
 Changelog for package joint_trajectory_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#38 <https://github.com/pr2/pr2_common_actions/issues/38>`_ from k-okada/add_travis
+  update travis.yml
+* fix for urdfdom versoin > 1.0.0 (melodic)
+* Contributors: Kei Okada
+
 0.0.10 (2018-02-14)
 -------------------
 * Merge pull request `#37 <https://github.com/pr2/pr2_common_actions/issues/37>`_ from k-okada/add_pr2_msgs
