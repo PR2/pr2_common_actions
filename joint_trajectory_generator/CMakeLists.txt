@@ -24,6 +24,12 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
   ${orocos_kdl_INCLUDE_DIRS})
 
+find_package(PkgConfig)
+pkg_check_modules(URDFDOM REQUIRED urdfdom)
+message(STATUS "Find URDFDOM ${URDFDOM_VERSION}")
+if ("${URDFDOM_VERSION}" VERSION_EQUAL "1.0.0" OR "${URDFDOM_VERSION}" VERSION_GREATER "1.0.0")
+  add_definitions(-DURDFDOM_1_0_0_API)
+endif()
 add_library(joint_trajectory_generation 
   src/trajectory_generation.cpp)
 target_link_libraries(joint_trajectory_generation
