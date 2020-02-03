@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   laser_geometry)
 
-find_package(Boost REQUIRED COMPONENTS signals)
+find_package(Boost REQUIRED)
 
 add_action_files(DIRECTORY action FILES GetSnapshot.action)
 generate_messages(DEPENDENCIES actionlib_msgs sensor_msgs pr2_msgs)
