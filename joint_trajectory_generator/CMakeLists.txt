@@ -10,7 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   joint_trajectory_action)
 
 find_package(Boost REQUIRED COMPONENTS thread)
-#find_package(orocos_kdl REQUIRED)
+find_package(orocos_kdl REQUIRED)
+#pkg_check_modules(OROCOS REQUIRED orocos_kdl)
 
 catkin_package(
   INCLUDE_DIRS include
