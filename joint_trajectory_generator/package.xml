@@ -22,7 +22,8 @@
 
   <build_depend>actionlib</build_depend>
   <build_depend>angles</build_depend>
-  <build_depend>orocos_kdl</build_depend>
+  <build_depend condition="$ROS_DISTRO != noetic">orocos_kdl</build_depend>
+  <build_depend condition="$ROS_DISTRO == noetic">liborocos-kdl-dev</build_depend>
   <build_depend>joint_trajectory_action</build_depend>
   <build_depend>pr2_controllers_msgs</build_depend>
   <build_depend>roscpp</build_depend>
@@ -30,7 +31,8 @@
 
   <exec_depend>actionlib</exec_depend>
   <exec_depend>angles</exec_depend>
-  <exec_depend>orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_DISTRO != noetic">orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_DISTRO == noetic">liborocos-kdl</exec_depend>
   <exec_depend>joint_trajectory_action</exec_depend>
   <exec_depend>pr2_controllers_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
