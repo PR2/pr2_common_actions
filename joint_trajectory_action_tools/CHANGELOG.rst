@@ -2,8 +2,8 @@
 Changelog for package joint_trajectory_action_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.12 (2021-05-20)
+-------------------
 * Merge pull request `#41 <https://github.com/PR2/pr2_common_actions//issues/41>`_ from k-okada/fix_travis
 * 2to3 -w -f print .
 * Contributors: Kei Okada
