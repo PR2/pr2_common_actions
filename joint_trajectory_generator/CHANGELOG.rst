@@ -2,6 +2,13 @@
 Changelog for package joint_trajectory_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#41 <https://github.com/PR2/pr2_common_actions//issues/41>`_ from k-okada/fix_travis
+* joint_trajectory_generator/package.xml: use liborocos-kdl for noetic
+* joint_trajectory_generator/package.xml: update to format=3
+* Contributors: Kei Okada
+
 0.0.11 (2018-09-22)
 -------------------
 * Merge pull request `#38 <https://github.com/pr2/pr2_common_actions/issues/38>`_ from k-okada/add_travis

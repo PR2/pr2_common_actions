@@ -2,6 +2,13 @@
 Changelog for package pr2_tilt_laser_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#39 <https://github.com/PR2/pr2_common_actions//issues/39>`_ from lopsided98/remove-boost-signals
+  pr2_tilt_laser_interface: remove unused Boost signals dependency
+* pr2_tilt_laser_interface: remove unused Boost signals dependency
+* Contributors: Ben Wolsieffer, Michael Görner
+
 0.0.11 (2018-09-22)
 -------------------
 

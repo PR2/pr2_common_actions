@@ -2,6 +2,13 @@
 Changelog for package pr2_tuck_arms_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#41 <https://github.com/PR2/pr2_common_actions//issues/41>`_ from k-okada/fix_travis
+* pr2_tuck_arms_action: fix for noetic with catkin_install_python, see http://wiki.ros.org/noetic/Migration and http://wiki.ros.org/UsingPython3/SourceCodeChanges
+* 2to3 -w -f print .
+* Contributors: Kei Okada
+
 0.0.11 (2018-09-22)
 -------------------
 
