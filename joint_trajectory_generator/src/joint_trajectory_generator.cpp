@@ -56,7 +56,7 @@ namespace joint_trajectory_generator {
     public:
     JointTrajectoryGenerator(std::string name) : 
       as_(ros::NodeHandle(), "joint_trajectory_generator",
-          boost::bind(&JointTrajectoryGenerator::executeCb, this, _1),
+          boost::bind(&JointTrajectoryGenerator::executeCb, this, boost::placeholders::_1),
           false),
       ac_("joint_trajectory_action"),
       got_state_(false)
@@ -174,7 +174,7 @@ namespace joint_trajectory_generator {
           return;
         }
 
-        ac_.sendGoal(full_goal, JTAC::SimpleDoneCallback(), JTAC::SimpleActiveCallback(), boost::bind(&JointTrajectoryGenerator::feedbackCb, this, _1));
+        ac_.sendGoal(full_goal, JTAC::SimpleDoneCallback(), JTAC::SimpleActiveCallback(), boost::bind(&JointTrajectoryGenerator::feedbackCb, this, boost::placeholders::_1));
 
         while(ros::ok() && !ac_.waitForResult(ros::Duration(0.05))){
           if(as_.isPreemptRequested()){
@@ -184,7 +184,7 @@ namespace joint_trajectory_generator {
               full_goal = createGoal(*new_goal);
               ac_.sendGoal(full_goal, JTAC::SimpleDoneCallback(),
                   JTAC::SimpleActiveCallback(),
-                  boost::bind(&JointTrajectoryGenerator::feedbackCb, this, _1));
+                  boost::bind(&JointTrajectoryGenerator::feedbackCb, this, boost::placeholders::_1));
             }
             else{
               ROS_DEBUG("Preempted by cancel");
